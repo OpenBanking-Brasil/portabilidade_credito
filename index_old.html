@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css"
+        />
+
+        <style>
+            .container {
+                margin-top: 100px;
+            }
+
+            p {
+                text-align: center;
+                font-size: 30pt;
+                font-weight: bold;
+            }
+
+            a:hover {
+                text-decoration: none;
+            }
+
+            .gt-head {
+                width: 100%;
+                margin: auto;
+                padding: 10px;
+                margin-bottom: 10px;
+                font-size: 20pt;
+                float: left;
+            }
+
+            .api-list-item-api-name{
+                text-align: left;
+                font-size: 17pt;
+            }
+
+            .api-list-item a {
+                color: white;
+            }
+
+            .api-list-item-api-address{
+                text-align: left;
+                font-size: 15pt;
+            }
+
+            .api-list-item {
+                width: 100%;
+                margin: auto;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .api-list-item:nth-child(odd) {
+                background-color: #005f78;
+            }
+
+            .api-list-item:nth-child(even) {
+                background-color: #157d96;
+            }
+        </style>
+    </head>
+
+    <body onload="createApisLinks()">
+        <div class="container">
+            <p>GT - Portabilidade de Crédito</p>
+            <div class="col-md-4 gt-head">
+                API
+                <div class="col-sm-12 api-list-item">
+                    <a href="swagger-apis/concurrency-management/index.html" target="_blank">
+                        <div class="api-list-item-api-name">
+                            API de Portabilidade de crédito
+                        </div>
+                    </a>
+                </div>                
+            </div>
+            <div class="col-md-4 gt-head">
+                Diagramas
+                <div class="col-sm-12 api-list-item">
+                    <a target="_blank" href="https://viewer.diagrams.net/#Uhttps://raw.githubusercontent.com/OpenBanking-Brasil/jornada_portabilidade_credito/refs/heads/main/portabilidade_credito.drawio#%7B%22pageId%22%3A%22S_8KnYUn45nm8ovX4nyg%22%7D">
+                        <div class="api-list-item-api-name">
+                            Diagama de Sequência
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-12 api-list-item">
+                    <a target="_blank" href="https://viewer.diagrams.net/#Uhttps://raw.githubusercontent.com/OpenBanking-Brasil/jornada_portabilidade_credito/refs/heads/main/portabilidade_credito.drawio">
+                        <div class="api-list-item-api-name">
+                            Diagrama Expandível
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4 gt-head">
+                Documentos complementares
+                <div class="col-sm-12 api-list-item">
+                    <a href="swagger-apis/concurrency-management/index.html" target="_blank">
+                        <div class="api-list-item-api-name">
+                            Runbook - API Portabilidade de Crédito
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-12 api-list-item">
+                    <a href="swagger-apis/concurrency-management/index.html" target="_blank">
+                        <div class="api-list-item-api-name">
+                            PRD
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
