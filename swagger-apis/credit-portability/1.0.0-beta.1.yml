@@ -19,7 +19,7 @@ paths:
         - Concurrency Management
       summary: Informa quais contratos pertencentes a um determinado cliente estará habilitado para a realização do pedido de portabilidade de crédito considerando a regra de só existir um pedido de portabilidade para um determinado contrato.
       description: Informa quais contratos estão disponíveis para solicitação de portabilidade de crédito.
-      operationId: getPersonalInvoiceFinancings
+      operationId: creditPortabilityGetResponseConcurrencyManagement
       parameters:
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/xFapiAuthDate'
@@ -64,6 +64,8 @@ paths:
         - Credit Portability
       summary: Realiza pedido de portabilidade de crédito para um determinado contrato junto a instituição credora
       description: Solicitação de portabilidade de crédito via OFB.
+      operationId: creditPortabilityPostResponsePortabilities
+
       parameters:
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/xFapiAuthDate'
