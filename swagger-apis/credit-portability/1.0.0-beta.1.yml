@@ -13,14 +13,15 @@ tags:
   - name: Credit Portability
     description:  Permite que usuários transfiram suas operações de crédito e arrendamento mercantil entre instituições financeiras em busca de melhores condições. 
 paths:
-  /concurrency-management:
+  /concurrency-management/{contractId}:
     get:
       tags:
         - Concurrency Management
       summary: Informa quais contratos pertencentes a um determinado cliente estará habilitado para a realização do pedido de portabilidade de crédito considerando a regra de só existir um pedido de portabilidade para um determinado contrato.
       description: Informa quais contratos estão disponíveis para solicitação de portabilidade de crédito.
-      operationId: getPersonalInvoiceFinancings
+      operationId: getConcurrencyManagement
       parameters:
+        - $ref: '#/components/parameters/contractId'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/xFapiAuthDate'
         - $ref: '#/components/parameters/xFapiCustomerIpAddress'
@@ -114,19 +115,12 @@ components:
         - data
       properties:
         data:
-          type: array
-          minItems: 0
+          type: object
           description: Conjunto de informações de contratos de empréstimos/financiamentos mantidos pelo cliente na instituição credora e para os quais ele tenha fornecido consentimento
-          items:
-            type: object
-            required:
+          required:
             - contractId
-            - contractNumber
-            - ipocCode
             - portability
-            - productType
-            - productSubType
-            properties:
+          properties:
               contractId:
                 type: string
                 pattern: "^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$"
@@ -134,82 +128,62 @@ components:
                 minLength: 1
                 example: "92792126019929279212650822221989319252576"
                 description: "Identifica de forma única o contrato da operação de crédito do cliente, mantendo as regras de imutabilidade dentro da instituição transmissora."
-              contractNumber:
-                type: string
-                pattern: ^[\w\W]{1,100}$
-                maxLength: 100
-                minLength: 1
-                example: "1324926521496"
-                description: |-
-                 Número padronizado do contrato - IPOC (Identificação Padronizada da Operação de Crédito). Segundo DOC 3040, composta por:
-
-                  CNPJ da instituição: 8 (oito) posições iniciais;
-                  Modalidade da operação: 4 (quatro) posições;
-                  Tipo do cliente: 1 (uma) posição( 1 = pessoa natural - CPF, 2= pessoa jurídica – CNPJ, 3 = pessoa física no exterior, 4 = pessoa jurídica no exterior, 5 = pessoa natural sem CPF e 6 = pessoa jurídica sem CNPJ);
-                  Código do cliente: O número de posições varia conforme o tipo do cliente:
-                  Para clientes pessoa física com CPF (tipo de cliente = 1), informar as 11 (onze) posições do CPF;
-                  Para clientes pessoa jurídica com CNPJ (tipo de cliente = 2), informar as 8 (oito) posições iniciais do CNPJ;
-                  Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
-                  Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
-              ipocCode:
-                type: string
-                pattern: ^[\w\W]{22,67}$
-                maxLength: 67
-                minLength: 22
-                example: "92792126019929279212650822221989319252576"
-                description: |-
-                 Número padronizado do contrato - IPOC (Identificação Padronizada da Operação de Crédito). Segundo DOC 3040, composta por:
-    
-                  CNPJ da instituição: 8 (oito) posições iniciais;
-                  Modalidade da operação: 4 (quatro) posições;
-                  Tipo do cliente: 1 (uma) posição( 1 = pessoa natural - CPF, 2= pessoa jurídica – CNPJ, 3 = pessoa física no exterior, 4 = pessoa jurídica no exterior, 5 = pessoa natural sem CPF e 6 = pessoa jurídica sem CNPJ);
-                  Código do cliente: O número de posições varia conforme o tipo do cliente:
-                  Para clientes pessoa física com CPF (tipo de cliente = 1), informar as 11 (onze) posições do CPF;
-                  Para clientes pessoa jurídica com CNPJ (tipo de cliente = 2), informar as 8 (oito) posições iniciais do CNPJ;
-                  Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
-                  Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
               portability:
                 type: object
                 required:
-                  - status
                   - isEligible
                 properties:
-                  status:
-                    type: string
-                    description: Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
-                    enum:
-                      - DISPONIVEL
-                      - PORTABILIDADE_EM_ANDAMENTO
-                  channel:
-                    type: string
-                    description: Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
-                    enum:
-                      - OFB
-                      - REGISTRADORA
                   isEligible:
                     type: boolean
                     description: Sinaliza se o contrato é elegível para pedido de portabilidade de crédito via OFB
-              productType:
-                type: string
-                enum:
-                  - EMPRESTIMOS
-                  - FINANCIAMENTOS
-                description: "Tipo da modalidade de crédito contratada, conforme circular 4.015 e descrição do DOC3040 do SCR)."
-              productSubType:
-                type: string
-                enum:
-                  - HOME_EQUITY
-                  - CHEQUE_ESPECIAL
-                  - CONTA_GARANTIDA
-                  - CAPITAL_GIRO_TETO_ROTATIVO
-                  - CREDITO_PESSOAL_SEM_CONSIGNACAO
-                  - CREDITO_PESSOAL_COM_CONSIGNACAO
-                  - MICROCREDITO_PRODUTIVO_ORIENTADO
-                  - CAPITAL_GIRO_PRAZO_VENCIMENTO_ATE_365_DIAS
-                  - CAPITAL_GIRO_PRAZO_VENCIMENTO_SUPERIOR_365_DIA
-                description: "Sub tipo da modalidades de crédito Empréstimos contratadas, conforme circular 4.015 e descrição do DOC3040 do SCR)."
-        links:
-          $ref: '#/components/schemas/Links'
+                  ineligible:
+                    type: object
+                    required:
+                      - reasonType
+                    description: |
+                      Objeto para auxiliar a Instituição Proponente a entender o porque um contrato está inelegivel para pedido de portabilidade de crédito
+                      
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo isEligible for igual a false
+                    properties:
+                      reasonType:
+                        type: string
+                        description: |
+                          Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
+                      reasonTypeAdditionalInfo:
+                        description: |
+                          Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
+                          
+                      
+                          [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo isEligible for igual a true
+                        type: string
+                  status:
+                    type: string
+                    description: |
+                      Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
+                      
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo isEligible for igual a true
+                    enum:
+                      - DISPONIVEL
+                      - EM_ANDAMENTO
+                  statusUpdateDateTime:
+                    type: string
+                    maxLength: 20
+                    pattern: ^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$
+                    example: 2020-07-21T08:30:00Z
+                    description: |
+                      Data e hora em que o contrato teve o status atualizado. Uma string com data e hora conforme especificação RFC-3339, sempre com a utilização de timezone UTC(UTC time format).
+                      
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo isEligible for igual a true
+                  channel:
+                    type: string
+                    description: |
+                      Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
+                      
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo status for igual a EM_ANDAMENTO
+                    enum:
+                      - OFB
+                      - REGISTRADORA
+                  
         meta:
           $ref: '#/components/schemas/Meta'
     RequestCreditPortability:
@@ -751,20 +725,8 @@ components:
       type: object
       description: Meta informações referente à API requisitada.
       required:
-        - totalRecords
-        - totalPages
         - requestDateTime
       properties:
-        totalRecords:
-          type: integer
-          format: int32
-          description: Número total de registros no resultado
-          example: 1
-        totalPages:
-          type: integer
-          format: int32
-          description: Número total de páginas no resultado
-          example: 1
         requestDateTime:
           description: 'Data e hora da consulta, conforme especificação RFC-3339, formato UTC.'
           type: string
