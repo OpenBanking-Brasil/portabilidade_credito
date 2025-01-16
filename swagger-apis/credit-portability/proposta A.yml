@@ -143,18 +143,27 @@ components:
                     description: |
                       Objeto para auxiliar a Instituição Proponente a entender o porque um contrato está inelegivel para pedido de portabilidade de crédito
                       
-                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo isEligible for igual a false
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo 'isEligible' for igual a 'false'
                     properties:
                       reasonType:
                         type: string
+                        example: CONTRATO_LIQUIDADO
+                        enum:
+                          - CONTRATO_LIQUIDADO
+                          - CLIENTE_COM_ACAO_JUDICIAL
+                          - MODALIDADE_OPERACAO_INCOMPATIVEL
+                          - OUTROS
                         description: |
-                          Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
+                          Informação sobre o motivo de inelegibilidade
+                          CONTRATO_LIQUIDADO: Contrato liquidado pelo cliente.
+                          CLIENTE_COM_ACAO_JUDICIAL: Cliente possui ação judicial
+                          MODALIDADE_OPERACAO_INCOMPATIVEL: Caso o contrato tenha uma modalidade diferente do praticado no escopo de modalidades disponiveis para portabilidade de crédito
+                          OUTROS: Caso exista algum motivo de recusa que não se encaixa nas opções disponiveis de reasonType, o campo reasonTypeAdditionalInfo deverá ser preenchido com o motivo da inelegibilidade
                       reasonTypeAdditionalInfo:
                         description: |
-                          Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito
-                          
+                          Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito                      
                       
-                          [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo isEligible for igual a true
+                          [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo 'reasonType' for igual a 'OUTROS'
                         type: string
                   status:
                     type: string
