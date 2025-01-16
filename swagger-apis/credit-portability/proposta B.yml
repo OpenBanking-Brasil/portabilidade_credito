@@ -158,13 +158,20 @@ components:
                         pattern: '^(?!\s)[\w\W\s]*[^\s]$'
                         maxLength: 80
                         example: Instituição ABC               
-                        description: 'Nome da Marca reportada pelo participante no Open Finance. Recomenda-se utilizar, sempre que possível, o mesmo nome de marca atribuído no campo do diretório Customer Friendly Server Name (Authorisation Server).'
+                        description: |
+                          Nome da Marca reportada pelo participante no Open Finance. Recomenda-se utilizar, sempre que possível, o mesmo nome de marca atribuído no campo do diretório Customer Friendly Server Name (Authorisation Server).
+
+                          [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo `status` for igual a `EM_ANDAMENTO`
+                
                   companyName:
                         type: string
                         pattern: '^(?!\s)[\w\W\s]*[^\s]$'
                         maxLength: 80
                         example: Empresa da Organização A              
-                        description: 'Nome da Instituição, pertencente à marca, responsável pela modalidade de Empréstimos. p.ex.Empresa da Organização A'
+                        description: |
+                          Nome da Instituição, pertencente à marca, responsável pela modalidade de Empréstimos. p.ex.Empresa da Organização A
+                          
+                          [RESTRIÇÃO] Campo de preenchimento obrigatório quando o campo `status` for igual a `EM_ANDAMENTO`
         links:
           $ref: '#/components/schemas/Links'
         meta:
