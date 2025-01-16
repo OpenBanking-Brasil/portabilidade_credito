@@ -147,6 +147,7 @@ components:
                     properties:
                       reasonType:
                         type: string
+                        example: CONTRATO_LIQUIDADO
                         enum:
                           - CONTRATO_LIQUIDADO
                           - CLIENTE_COM_ACAO_JUDICIAL
