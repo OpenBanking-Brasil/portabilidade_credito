@@ -275,6 +275,11 @@ components:
               maxLength: 20
               format: date-time
               example: '2021-05-21T08:30:00Z'
+    XV:
+      type: string
+      format: uuid
+      pattern: '^\d+\.\d+\.\d+$'
+      example: 1.0.0
     XFapiInteractionId:
       type: string
       format: uuid
@@ -282,7 +287,7 @@ components:
       minLength: 1
       maxLength: 36
       example: d78fc4e5-37ca-4da3-adf2-9b082bf92280
-      description: 'Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela receptora (client) e o seu valor deve ser “espelhado” pela transmissora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a transmissora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A receptora deve acatar o valor recebido da transmissora.'
+
   parameters:
     Authorization:
       name: Authorization
@@ -363,7 +368,7 @@ components:
     xFapiInteractionId:
       name: x-fapi-interaction-id
       in: header
-      description: 'Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela receptora (client) e o seu valor deve ser “espelhado” pela transmissora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a transmissora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A receptora deve acatar o valor recebido da transmissora.'
+      description: 'Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.'
       required: true
       schema:
         type: string
@@ -386,22 +391,19 @@ components:
           scopes:
             loans: Escopo necessário para acesso à API Loans. O controle dos endpoints específicos é feito via permissions.
   responses:
-    POSTResponseCreditPortability:
-      description: Dados dos contratos de empréstimos obtidos com sucesso.
-      headers:
-        x-fapi-interaction-id:
-          schema:
-            $ref: '#/components/schemas/XFapiInteractionId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/POSTResponseCreditPortability'
     OKResponseConcurrancyManagement:
       description: Dados dos contratos de empréstimos obtidos com sucesso.
       headers:
         x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
       content:
         application/json:
           schema:
