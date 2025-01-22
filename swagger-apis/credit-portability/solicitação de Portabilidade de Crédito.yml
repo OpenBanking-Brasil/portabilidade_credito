@@ -618,10 +618,17 @@ components:
                   - ACCEPTED_WITH_CHANGE
                   - CANCELED
               strCode:
-                type: string
-                enum:
-                  - 12314564654987987
-                description: "Tipo da modalidade de crédito contratada, conforme circular 4.015 e descrição do DOC3040 do SCR)."
+                type: object
+                required:
+                  - isbpIfCredora
+                  - agency
+                properties:
+                  isbpIfCredora:
+                    type: number
+                    description: Número do ISBP da Instituição credora
+                  agency:
+                    type: number
+                    description: Número da Agência creditada
         meta:
           type: object
           properties:
