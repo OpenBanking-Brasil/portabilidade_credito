@@ -30,7 +30,7 @@ paths:
           application/jwt:
             schema:
               $ref: '#/components/schemas/RequestCreditPortability'
-        description: Payload para criação da iniciação do pagamento Pix.
+        description: Payload para o pedido de portabilidade de crédito.
         required: true
       responses:
         '202':
@@ -88,6 +88,9 @@ components:
                 minItems: 1
                 items:
                   type: object
+                  required:
+                    - type
+                    - value 
                   properties:
                     type:
                       type: string
@@ -101,9 +104,15 @@ components:
                       example: "11999999999"
               institution:
                 type: object
+                required:
+                  - creditor
+                  - proposing
                 properties:
                   creditor:
                     type: object
+                    required:
+                      - companyName
+                      - companyCnpj
                     properties:
                       companyName:
                         type: string
@@ -119,6 +128,9 @@ components:
                         description: 'Número completo do CNPJ da instituição responsável pelo Cadastro - o CNPJ corresponde ao número de inscrição no Cadastro de Pessoa Jurídica. Deve-se ter apenas os números do CNPJ, sem máscara.'
                   proposing:
                     type: object
+                    required:
+                      - companyName
+                      - companyCnpj
                     properties:
                       companyName:
                         type: string
@@ -150,6 +162,13 @@ components:
                               example: "contato@instituicao_proponente.com.br"
               contractIdentification:
                 type: object
+                required:
+                  - contractId
+                  - contractNumber
+                  - ipocCode
+                  - contractDate
+                  - paidInstalments
+                  - contractOutstandingBalance
                 properties:
                   contractId:
                     type: string
@@ -281,6 +300,11 @@ components:
                     description: Valor necessário para o cliente liquidar a dívida.
               proposedContract:
                 type: object
+                required:
+                  - interestRates
+                  - contractedFees
+                  - contractedFinanceCharges
+                  - digitalSignatureProof
                 properties:
                   interestRates:
                     type: array
@@ -400,12 +424,16 @@ components:
                             O preenchimento deve respeitar as 6 casas decimais, mesmo que venham preenchidas com zeros(representação de porcentagem p.ex: 0.150000. Este valor representa 15%. O valor 1 representa 100%).
                           example: '0.070000'
                     minItems: 0
-                  documentSigned:
+                  digitalSignatureProof:
                     type: object
-                    required:
-                      - signatureDateTime
-                      - ipAdress
                     properties:
+                      documentId:
+                        type: string
+                        pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
+                        maxLength: 100
+                        minLength: 1
+                        example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+                        description: "Código identificador do Documento assinado na instituição proponente."
                       signatureDateTime:
                         type: string
                         maxLength: 20
@@ -413,13 +441,9 @@ components:
                         example: "2020-07-21T08:30:00Z"
                         description: |
                           Data e hora em que o contrato foi assinado pelo cliente  no canal digital da Instituição Proponente
-                      ipAddress:
-                        type: string
-                        maxLength: 15
-                        pattern: /^((1?\d{1,2}|2([0-4]\d|5[0-5]))\.){3}(1?\d{1,2}|2([0-4]\d|5[0-5]))$|^$/
-                        example: "400.156.125.132"
-                        description: |
-                          Endereço de IP capturado no momento da assinatura
+                    required:
+                      - documentId
+                      - signatureDateTime
 
     LoansContractInterestRate:
       type: object
