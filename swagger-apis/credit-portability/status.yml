@@ -74,6 +74,7 @@ components:
           required:
             - status
             - portabilityId
+            - statusUpdateDateTime
           properties:
               portabilityId:
                 type: string
