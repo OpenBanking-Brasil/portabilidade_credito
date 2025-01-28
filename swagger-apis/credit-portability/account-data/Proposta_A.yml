@@ -18,9 +18,9 @@ paths:
     get:
       tags:
         - Account data
-      summary: Informa dados necessários para realização do pagamento.
+      summary: Informa dados necessários para realização da liquidação da operação.
       description: Informa dados para pagamento
-      operationId: getAccountData
+      operationId: getAccountDataCreditPortability
       parameters:
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/xFapiAuthDate'
@@ -65,7 +65,7 @@ components:
       properties:
         data:
           type: object
-          description: Dados referentes para realização do pagamento
+          description: Dados referentes para realização da liquidação da operação
           required:
             - strCode
           properties:
