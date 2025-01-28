@@ -96,6 +96,12 @@ components:
                   `ACCEPTED_SETTLEMENT_COMPLETED` - Indica que a instituição proponente já liquidou o contrato e comunicou a respeito a credora que está validando os dados do contratos bem como valores recebidos para a quitação do mesmo (nesta etapa a instituição credora tem 2 dias úteis para fornecer a confirmação e o recibo de quitação do contrato de empréstimo).
                   
                   `PORTABILITY_COMPLETED` - Indica que o pedido de portabilidade foi concluído com sucesso
+                  
+                  `REJECTED` - Indica que o pedido de portabilidade de crédito foi rejeitado, seja porque o cliente aceitou a contraproposta, ou porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  
+                  `CANCELED` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
+                  
+                  `PAYMENT_ISSUE` - Indica que a portabilidade foi cancelada por inconsistência relacionada no pagamento da Instituição Proponente a Instituição Credora.
                 enum:
                   - RECEIVED
                   - PENDING
@@ -104,6 +110,7 @@ components:
                   - PORTABILITY_COMPLETED
                   - REJECTED
                   - CANCELED
+                  - PAYMENT_ISSUE
               statusUpdateDateTime:
                 type: string
                 maxLength: 20
@@ -113,10 +120,46 @@ components:
                   Data e hora em que o contrato teve o status atualizado. Uma string com data e hora conforme especificação RFC-3339, sempre com a utilização de timezone UTC(UTC time format).
               statusReason:
                 type: string
+                enum:
+                  - CANCELADO_PELO_CLIENTE
+                  - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
+                  - POLÍTICA_DE_CRÉDITO
+                  - RETENÇÃO_DO_CLIENTE
+                  - CONTRATO_JÁ_LIQUIDADO
+                  - DIVERGÊNCIA_DE_PAGAMENTO_EFETUADO
+                  - DECURSO_DO_PRAZO_PARA_PAGAMENTO
+                  - PORTABILIDADE_CANCELADA_POR_FALTA_DE_LIQUIDAÇÃO
+                  - PORTABILIDADE_EM_ANDAMENTO
+                  - CLIENTE_COM_AÇÃO_JUDICIAL
+                  - MODALIDADE_DA_OPERAÇÃO_INCOMPATÍVEL
                 description: |
-                  Motivo do status corrente do pedido de portabilidade
+                  Motivo de recusa do pedido de portabilidade, onde:
                   
-                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELADO`
+                  `CANCELADO_PELO_CLIENTE` - Cliente desiste do pedido da portabilidade 
+                  
+                  `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente 
+                  
+                  `POLÍTICA_DE_CRÉDITO` - Proponente desiste da oferta ao cliente por políticas internas 
+                  
+                  `RETENÇÃO_DO_CLIENTE` - Cliente aceitou contraproposta da instituição credora (dentro do prazo)
+                  
+                  `CONTRATO_JÁ_LIQUIDADO` - Contrato liquidado pelo cliente. 
+                  
+                  `DIVERGÊNCIA_DE_PAGAMENTO_EFETUADO` - Proponente realizou a liquidação com valor divergente 
+
+                  `DECURSO_DO_PRAZO_PARA_PAGAMENTO` - Proponente realizou a liquidação fora do prazo 
+                  
+                  `PORTABILIDADE_CANCELADA_POR_FALTA_DE_LIQUIDAÇÃO` - Proponente não realizou a liquidação do contrato 
+                  
+                  `PORTABILIDADE_EM_ANDAMENTO` - Posteriormente à efetivação do pedido de portabilidade, a IF credora identificou que o cliente já possui outro pedido de portabilidade em andamento para o mesmo contrato. 
+                  
+                  `CLIENTE_COM_AÇÃO_JUDICIAL` - Possui ação judicial 
+
+                  `MODALIDADE_DA_OPERAÇÃO_INCOMPATÍVEL` - Modalidade divergente da indicada pela instituição proponente 
+                  
+                 
+                 
+                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELADO` ou `PAYMENT_ISSUE`
                   
         links:
           $ref: '#/components/schemas/Links'
