@@ -486,8 +486,11 @@ components:
                   Data e hora em que o contrato teve o status atualizado. Uma string com data e hora conforme especificação RFC-3339, sempre com a utilização de timezone UTC(UTC time format).
               statusReason:
                 type: object
+                required: 
+                  - reasonType
                 description: |
                   Motivo de recusa do pedido de portabilidade
+                  
                   [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELADO` ou `PAYMENT_ISSUE`
 
                 properties: 
