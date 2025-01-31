@@ -525,7 +525,8 @@ components:
                     
                   reasonTypeTicket:
                     description: |
-                      Número do ticket para mapeamento do novo enum relacionado ao campo reasonTypeAdditionalInfo
+                      Número do ticket para mapeamento do novo enum relacionado ao campo reasonTypeAdditionalInfo.
+                      
                       [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonTypeAdditionalInfo` for informado.
                     type: string
                     pattern: '^(?!\s)[\w\W\s]*[^\s]$'
