@@ -530,6 +530,30 @@ components:
                     type: string
                     pattern: '^(?!\s)[\w\W\s]*[^\s]$'
                     example: "112233"
+                  digitalSignatureProof:
+                    type: object
+                    description: |
+                      Comprovante de assinatura da contraproposta
+                      
+                      [RESTRIÇÃO] Objeto de preenchimento obrigatório quando campo `reasonType` for igual a `RETENCAO_DO_CLIENTE`
+                    properties:
+                      documentId:
+                        type: string
+                        pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
+                        maxLength: 100
+                        minLength: 1
+                        example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+                        description: "Código identificador do Documento assinado na instituição proponente."
+                      signatureDateTime:
+                        type: string
+                        maxLength: 20
+                        pattern: ^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$
+                        example: "2020-07-21T08:30:00Z"
+                        description: |
+                          Data e hora em que o contrato foi assinado pelo cliente  no canal digital da Instituição Proponente
+                    required:
+                      - documentId
+                      - signatureDateTime
                     
 
     Meta:
