@@ -74,12 +74,12 @@ components:
             strCode:
               type: object
               required:
-                - isbpIfCredora
+                - ispb
                 - agency
               properties:
-                isbpIfCredora:
+                ispb:
                   type: number
-                  description: Número do ISBP da Instituição credora
+                  description: Número do ISPB da Instituição credora
                 agency:
                   type: number
                   description: Número da Agência creditada
@@ -269,7 +269,7 @@ components:
             loans: Escopo necessário para acesso à API Loans. O controle dos endpoints específicos é feito via permissions.
   responses:
     OKResponseAccountData:
-      description: Dados dos contratos de empréstimos obtidos com sucesso.
+      description: Dados para realização do pagamento da operação via TED.
       headers:
         x-fapi-interaction-id:
           description: |
