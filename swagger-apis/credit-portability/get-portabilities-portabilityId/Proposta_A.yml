@@ -517,7 +517,8 @@ components:
                   reasonTypeAdditionalInfo: 
                     description: |
                       Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
-                      Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance para discussão e mapeamento em futuras versões.
+                      Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
+                      para discussão e mapeamento em futuras versões.
 
                       [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
                     type: string
