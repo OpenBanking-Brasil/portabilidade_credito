@@ -76,13 +76,20 @@ components:
               required:
                 - ispb
                 - agency
+                - accountNumber
               properties:
                 ispb:
                   type: number
+                  example: 68741
                   description: Número do ISPB da Instituição credora
                 agency:
                   type: number
                   description: Número da Agência creditada
+                  example: 65784
+                accountNumber:
+                  type: number
+                  description: Número da conta bancária da credora
+                  example: 15324
         links:
           $ref: '#/components/schemas/Links'
         meta:
