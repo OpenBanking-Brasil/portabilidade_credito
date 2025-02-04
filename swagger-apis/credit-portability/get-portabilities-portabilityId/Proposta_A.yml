@@ -516,23 +516,14 @@ components:
                     
                   reasonTypeAdditionalInfo: 
                     description: |
-                      Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito. 
-                      Deve ser preenchido como uma proposta para inclusão nas definições, exemplo MOTIVO_NAO_MAPEADO: descrição de usar esse motivo específico. 
-                      Ao utilizar essa opção, é obrigatório enviar um ticket para a estrutura open finance para mapeamento em futuras versões.
+                      Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
+                      Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance para discussão e mapeamento em futuras versões.
 
                       [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
                     type: string
                     pattern: '^(?!\s)[\w\W\s]*[^\s]$'
-                    example: MOTIVO_NAO_MAPEADO - Quando o motivo não foi mapeado previamente pelo open finance
+                    example: A documentação enviada pelo cliente ou pela instituição proponente contém erros ou informações inconsistentes, impossibilitando a continuidade do processo de portabilidade.
                     
-                  reasonTypeTicket:
-                    description: |
-                      Número do ticket para mapeamento do novo enum relacionado ao campo reasonTypeAdditionalInfo.
-                      
-                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonTypeAdditionalInfo` for informado.
-                    type: string
-                    pattern: '^(?!\s)[\w\W\s]*[^\s]$'
-                    example: "112233"
                   digitalSignatureProof:
                     type: object
                     description: |
