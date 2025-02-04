@@ -214,26 +214,6 @@ components:
                       Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
                       
                       - Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
-                  contractDate:
-                    type: string
-                    format: date
-                    maxLength: 10
-                    pattern: '^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])$'
-                    example: '2018-01-05'
-                    description: Data de contratação da operação de crédito. Especificação RFC-3339
-                  paidInstalments:
-                    type: number
-                    maximum: 2147483647
-                    example: 73
-                    description: Quantidade total de parcelas pagas do contrato referente à Modalidade de Crédito informada.
-                  contractOutstandingBalance:
-                    type: string
-                    format: double
-                    pattern: '^\d{1,15}\.\d{2,4}$'
-                    maxLength: 20
-                    minLength: 4
-                    example: '1000.0400'
-                    description: Valor necessário para o cliente liquidar a dívida.
               proposedContract:
                 type: object
                 minItems: 1
