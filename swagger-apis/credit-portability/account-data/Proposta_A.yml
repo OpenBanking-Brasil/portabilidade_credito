@@ -18,8 +18,8 @@ paths:
     get:
       tags:
         - Account data
-      summary: Informa dados necessários para realização da liquidação da operação.
-      description: Informa dados para pagamento
+      summary: Obtém os dados necessários para realização do pagamento da operação via TED.
+      description: Método responsável por recuperar informações de contas  para realização do pagamento via TED.
       operationId: getAccountDataCreditPortability
       parameters:
         - $ref: '#/components/parameters/Authorization'
@@ -65,7 +65,7 @@ components:
       properties:
         data:
           type: object
-          description: Dados referentes para realização da liquidação da operação
+          description: Dados para realização do pagamento da operação via TED
           required:
             - strCode
           properties:
