@@ -522,8 +522,9 @@ components:
 
                       [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
                     type: string
+                    maxLength: 144
                     pattern: '^(?!\s)[\w\W\s]*[^\s]$'
-                    example: A documentação enviada pelo cliente ou pela instituição proponente contém erros ou informações inconsistentes, impossibilitando a continuidade do processo de portabilidade.
+                    example: Informações Adicionais
                     
                   digitalSignatureProof:
                     type: object
