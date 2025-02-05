@@ -108,11 +108,11 @@ components:
                 example: '1000.0400'
                 description: Valor pago para liquidação do contrato de empréstimo.
               transactionId:
-                type: number
-                pattern: '^\d{1,15}\$'
+                type: string
+                pattern: '^(?!\s)[\w\W\s]*[^\s]$'
                 maxLength: 20
                 minLength: 1
-                example: '123467'
+                example: 'STR20181108000000013'
                 description: |
                   Identificador da transação utilizada para Proponente liquidar portabilidade de crédito com a Credora.
                   
@@ -157,11 +157,11 @@ components:
                 example: '1000.0400'
                 description: Valor pago para liquidação do contrato de empréstimo.
               transactionId:
-                type: number
-                pattern: '^\d{1,15}\$'
+                type: string
+                pattern: '^(?!\s)[\w\W\s]*[^\s]$'
                 maxLength: 20
                 minLength: 1
-                example: '123467'
+                example: 'STR20181108000000013'
                 description: |
                   Identificador da transação utilizada para Proponente liquidar portabilidade de crédito com a Credora.
                   
