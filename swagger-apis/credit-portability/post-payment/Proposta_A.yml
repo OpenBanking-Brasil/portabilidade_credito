@@ -82,6 +82,7 @@ components:
             - portabilityId
             - paymentDateTime
             - paymentAmount
+            - transactionId
 
           properties:
               portabilityId:
@@ -106,6 +107,16 @@ components:
                 minLength: 4
                 example: '1000.0400'
                 description: Valor pago para liquidação do contrato de empréstimo.
+              transactionId:
+                type: number
+                pattern: '^\d{1,15}\$'
+                maxLength: 20
+                minLength: 1
+                example: '123467'
+                description: |
+                  Identificador da transação utilizada para Proponente liquidar portabilidade de crédito com a Credora.
+                  
+                  No contexto de STR0047, utilizar o valor do campo de retorno NumCtrlSTR (Numero de Controle da STR)".
 
     POSTResponseCreditPortabilityPayment:
       type: object
@@ -120,6 +131,7 @@ components:
             - portabilityId
             - paymentDateTime
             - paymentAmount
+            - transactionId
 
           properties:
               portabilityId:
@@ -144,6 +156,16 @@ components:
                 minLength: 4
                 example: '1000.0400'
                 description: Valor pago para liquidação do contrato de empréstimo.
+              transactionId:
+                type: number
+                pattern: '^\d{1,15}\$'
+                maxLength: 20
+                minLength: 1
+                example: '123467'
+                description: |
+                  Identificador da transação utilizada para Proponente liquidar portabilidade de crédito com a Credora.
+                  
+                  No contexto de STR0047, utilizar o valor do campo de retorno NumCtrlSTR (Numero de Controle da STR)".
         meta:
           type: object
           properties:
