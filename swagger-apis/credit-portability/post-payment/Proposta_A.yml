@@ -31,7 +31,7 @@ paths:
           application/jwt:
             schema:
               $ref: '#/components/schemas/RequestCreditPortabilityPayment'
-        description: Payload para o pedido de portabilidade de crédito.
+        description: Payload para comunicar a liquidação efetuada pela proponente a credora e iniciar a proxima etapa do fluxo de portabilidade de crédito.
         required: true
       responses:
         '202':
@@ -77,7 +77,7 @@ components:
       properties:
         data:
           type: object
-          description: Conjunto de informações de contratos de empréstimos/financiamentos mantidos pelo cliente na instituição credora e para os quais ele tenha fornecido consentimento
+          description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
           required:
             - portabilityId
             - paymentDateTime
@@ -115,7 +115,7 @@ components:
         data:
           type: object
           minItems: 0
-          description: Conjunto de informações de contratos de empréstimos/financiamentos mantidos pelo cliente na instituição credora e para os quais ele tenha fornecido consentimento
+          description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
           required:
             - portabilityId
             - paymentDateTime
