@@ -1,0 +1,513 @@
+openapi: 3.0.0
+info:
+  title: API Credit Portability do Open Finance Brasil
+  description: |
+    A API de Portabilidade de Crédito permite que usuários transfiram suas operações de crédito e arrendamento mercantil entre instituições financeiras em busca de melhores condições para o Open Finance Brasil.
+    
+  version: 1.0.0
+  contact:
+    url: 'https://servicedesk.openbankingbrasil.org.br/Login.jsp?navLanguage=pt-BR'
+servers:
+  - url: 'http://api.banco.com.br/portability/credit-portability/v1'
+tags:
+  - name: Payments
+    description: Bloco de endpoints representando a jornada de liquidação e confirmação de recebíveis
+paths:
+  /portabilities/{portabilityId}/payment/receipt:
+    get:
+      tags:
+        - Payments
+      summary: Instituição Credora emite recibo de quitação do contrato de empréstimo.
+      description: Instituição Credora emite recibo de quitação do contrato de empréstimo.
+      parameters:
+        - $ref: '#/components/parameters/portabilityId'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/xFapiAuthDate'
+        - $ref: '#/components/parameters/xFapiCustomerIpAddress'
+        - $ref: '#/components/parameters/xFapiInteractionId'
+        - $ref: '#/components/parameters/xCustomerUserAgent'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseReceipt'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '423':
+          $ref: '#/components/responses/Locked'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+        '529':
+          $ref: '#/components/responses/SiteIsOverloaded'
+        default:
+          $ref: '#/components/responses/Default'
+      security:
+      - NonRedirectAuthorizationCode:
+            - openid
+            - 'enrollment:enrollmentId'
+            - payments
+            - nrp-consents
+components:
+  schemas:
+    ResponseReceipt:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          minItems: 0
+          description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
+          required:
+            - portabilityId
+            - settlementDateTime
+            - settlementAmount
+            - transactionId
+
+          properties:
+              portabilityId:
+                type: string
+                pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
+                maxLength: 100
+                minLength: 1
+                example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+                description: "Código identificador do pedido de portabilidade realizado."
+              settlementDateTime:
+                type: string
+                maxLength: 20
+                pattern: ^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$
+                example: "2020-07-21T08:30:00Z"
+                description: |
+                  Data e hora em que a instituição credora realizou a quitação do contrato de empréstimo.
+              settlementAmount:
+                type: string
+                format: double
+                pattern: '^\d{1,15}\.\d{2,4}$'
+                maxLength: 20
+                minLength: 4
+                example: '1000.0400'
+                description: Valor pago para liquidação do contrato de empréstimo.
+              transactionId:
+                type: string
+                pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                maxLength: 20
+                minLength: 1
+                example: 'STR20181108000000013'
+                description: |
+                  Identificador da transação utilizado para liquidar o contrato de empréstimo.
+                  
+                  No contexto de STR0047, utilizar o valor do campo de retorno NumCtrlSTR (Numero de Controle da STR)".
+        meta:
+          type: object
+          properties:
+            requestDateTime:
+              description: 'Data e hora da consulta, conforme especificação RFC-3339, formato UTC.'
+              type: string
+              maxLength: 20
+              format: date-time
+              example: '2021-05-21T08:30:00Z'
+    ResponseErrorWithAbleAdditionalProperties:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          minItems: 1
+          maxItems: 13
+          items:
+            type: object
+            required:
+              - code
+              - title
+              - detail
+            properties:
+              code:
+                description: Código de erro específico do endpoint
+                type: string
+                pattern: '[\w\W\s]*'
+                maxLength: 255
+              title:
+                description: Título legível por humanos deste erro específico
+                type: string
+                pattern: '[\w\W\s]*'
+                maxLength: 255
+              detail:
+                description: Descrição legível por humanos deste erro específico
+                type: string
+                pattern: '[\w\W\s]*'
+                maxLength: 2048
+        meta:
+          type: object
+          properties:
+            requestDateTime:
+              description: 'Data e hora da consulta, conforme especificação RFC-3339, formato UTC.'
+              type: string
+              maxLength: 20
+              format: date-time
+              example: '2021-05-21T08:30:00Z'
+    XV:
+      type: string
+      format: uuid
+      pattern: '^\d+\.\d+\.\d+$'
+      example: 1.0.0
+    XFapiInteractionId:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+      minLength: 1
+      maxLength: 36
+      example: d78fc4e5-37ca-4da3-adf2-9b082bf92280
+  parameters:
+    Authorization:
+      name: Authorization
+      in: header
+      description: Cabeçalho HTTP padrão. Permite que as credenciais sejam fornecidas dependendo do tipo de recurso solicitado
+      required: true
+      schema:
+        type: string
+        pattern: '[\w\W\s]*'
+        maxLength: 2048
+    portabilityId:
+      name: portabilityId
+      in: path
+      description: Identificador do pedido de portabilidade de crédito.
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$'
+        maxLength: 100
+    contractId:
+      name: contractId
+      in: path
+      description: Identificador do contrato para todos os tipos de operação de crédito.
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$'
+        maxLength: 100
+    page:
+      name: page
+      in: query
+      description: Número da página que está sendo requisitada (o valor da primeira página é 1).
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+        maximum: 2147483647
+        format: int32
+    pageSize:
+      name: page-size
+      in: query
+      description: Quantidade total de registros por páginas.
+      schema:
+        type: integer
+        default: 25
+        minimum: 1
+        format: int32
+        maximum: 1000
+    pagination-key:
+      name: pagination-key
+      in: query
+      description: 'Identificador de rechamada, utilizado para evitar a contagem de chamadas ao endpoint durante a paginação.'
+      schema:
+        type: string
+        maxLength: 2048
+        pattern: '[\w\W\s]*'
+    xCustomerUserAgent:
+      name: x-customer-user-agent
+      in: header
+      description: Indica o user-agent que o usuário utiliza.
+      required: false
+      schema:
+        type: string
+        pattern: '[\w\W\s]*'
+        minLength: 1
+        maxLength: 100
+    xFapiAuthDate:
+      name: x-fapi-auth-date
+      in: header
+      description: 'Data em que o usuário logou pela última vez com o receptor. Representada de acordo com a [RFC7231](https://tools.ietf.org/html/rfc7231).Exemplo: Sun, 10 Sep 2017 19:43:31 UTC'
+      required: false
+      schema:
+        type: string
+        pattern: '^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} (GMT|UTC)$'
+        minLength: 29
+        maxLength: 29
+    xFapiCustomerIpAddress:
+      name: x-fapi-customer-ip-address
+      in: header
+      description: O endereço IP do usuário se estiver atualmente logado com a instituição proponente.
+      required: false
+      schema:
+        type: string
+        pattern: '[\w\W\s]*'
+        minLength: 1
+        maxLength: 100
+    xFapiInteractionId:
+      name: x-fapi-interaction-id
+      in: header
+      description: 'Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.'
+      required: true
+      schema:
+        type: string
+        format: uuid
+        pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        minLength: 1
+        maxLength: 36
+        example: d78fc4e5-37ca-4da3-adf2-9b082bf92280
+  securitySchemes:
+    NonRedirectAuthorizationCode:
+      type: oauth2
+      description: Fluxo OAuth necessário para que a Instituição Proponente possa solicitar o pedido de portabilidade sem redirecionamento.
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://authserver.example/token'
+          tokenUrl: 'https://authserver.example/token'
+          scopes:
+            payments: Escopo necessário para acesso à  API Payment Initiation.
+            openid: Indica que a autorização está sendo realizada utilizando o protocolo definido pela openid.
+            'enrollment:enrollmentId': Permite realizar atualização de um registro com a permissão do cliente.
+            nrp-consents: Consentimento para pagamentos sem redirecionamento.
+  responses:
+    ResponseReceipt:
+      description: Dados do recibo de quita;áo do contrato de empréstimo.
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/jwt:
+          schema:
+            $ref: '#/components/schemas/ResponseReceipt'
+    BadRequest:
+      description: 'A requisição foi malformada, omitindo atributos obrigatórios, seja no payload ou através de atributos na URL.'
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    Forbidden:
+      description: O token tem escopo incorreto ou uma política de segurança foi violada
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    InternalServerError:
+      description: Ocorreu um erro no gateway da API ou no microsserviço
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    GatewayTimeout:
+      description: GATEWAY TIMEOUT - A requisição não foi atendida dentro do tempo limite estabelecido
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    Locked:
+      description: Locked
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    MethodNotAllowed:
+      description: O consumidor tentou acessar o recurso com um método não suportado
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    NotAcceptable:
+      description: A solicitação continha um cabeçalho Accept diferente dos tipos de mídia permitidos ou um conjunto de caracteres diferente de UTF-8
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    NotFound:
+      description: O recurso solicitado não existe ou não foi implementado
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    TooManyRequests:
+      description: 'A operação foi recusada, pois muitas solicitações foram feitas dentro de um determinado período ou o limite global de requisições concorrentes foi atingido'
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    Unauthorized:
+      description: Cabeçalho de autenticação ausente/inválido ou token inválido
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    UnprocessableEntity:
+      description: 'A sintaxe da requisição esta correta, mas não foi possível processar as instruções presentes.'
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    SiteIsOverloaded:
+      description: 'O site está sobrecarregado e a operação foi recusada, pois foi atingido o limite máximo de TPS global, neste momento.'
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+    Default:
+      description: Erro inesperado.
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
