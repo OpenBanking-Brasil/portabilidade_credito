@@ -67,6 +67,8 @@ components:
       type: object
       required:
         - data
+        - links
+        - meta
       properties:
         data:
           type: object
@@ -111,6 +113,18 @@ components:
                   Identificador da transação utilizado para liquidar o contrato de empréstimo.
                   
                   No contexto de STR0047, utilizar o valor do campo de retorno NumCtrlSTR (Numero de Controle da STR)".
+        links:
+          type: object
+          description: Referências para outros recusos da API requisitada.
+          required:
+            - self
+          properties:
+            self:
+              type: string
+              format: uri
+              maxLength: 2000
+              description: URI completo que gerou a resposta atual.
+              example: 'https://api.banco.com.br/open-banking/api/v1/resource'
         meta:
           type: object
           properties:
