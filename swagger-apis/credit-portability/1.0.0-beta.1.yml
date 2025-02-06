@@ -18,7 +18,8 @@ paths:
       tags:
         - Credit Portability
       summary: Informa se um contrato pertencente a um determinado cliente estará habilitado para a realização do pedido de portabilidade de crédito considerando a regra de só existir um pedido de portabilidade para um determinado contrato.
-      description: Informa se o contrato está disponível para solicitação de portabilidade de crédito.
+      description: |
+        Para evitar o envio de múltiplas solicitações de portabilidade para o mesmo contrato, as instituições devem implementar mecanismos que permitam: recusar solicitações simultâneas de portabilidade de crédito referentes ao mesmo contrato, seja por meio da registradora ou do Open Finance Brasil (OFB), priorizando sempre a solicitação mais antiga.
       operationId: creditPortabilityGetConcurrencyManagement
       parameters:
         - $ref: '#/components/parameters/contractId'
@@ -202,7 +203,7 @@ paths:
   /portabilities/{portabilityId}/payment:
     post:
       tags:
-        - Payments
+        - Credit Portability
       summary: Comunica a Instituição Credora a respeito da liquidação da portabilidade de crédito.
       description: Comunica a Instituição Credora a respeito da liquidação da portabilidade de crédito.
       operationId: creditPortabilityPostPortabilitiesPayment
@@ -259,7 +260,7 @@ paths:
   /account-data:
     get:
       tags:
-        - Account data
+        - Credit Portability
       summary: Obtém os dados necessários para realização do pagamento da operação via TED.
       description: Método responsável por recuperar informações de contas  para realização do pagamento via TED.
       operationId: creditPortabilityGetAccountData
