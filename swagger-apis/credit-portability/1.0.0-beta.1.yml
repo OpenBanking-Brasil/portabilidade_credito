@@ -15,7 +15,8 @@ tags:
 paths:
   "/concurrency-management/{contractId}":
     get:
-
+      tags:
+        - Credit Portability
       summary: Informa se um contrato pertencente a um determinado cliente estará habilitado para a realização do pedido de portabilidade de crédito considerando a regra de só existir um pedido de portabilidade para um determinado contrato.
       description: Informa se o contrato está disponível para solicitação de portabilidade de crédito.
       operationId: creditPortabilityGetConcurrencyManagement
@@ -61,7 +62,8 @@ paths:
           
   /portabilities:
     post:
-
+      tags:
+        - Credit Portability
       summary: Realiza pedido de portabilidade de crédito para um determinado contrato junto a instituição credora
       description: Solicitação de portabilidade de crédito via OFB.
       parameters:
@@ -112,9 +114,123 @@ paths:
             - 'enrollment:enrollmentId'
             - payments
             - nrp-consents
+    get:
+      tags:
+        - Credit Portability
+      summary: Consulta portabilida de crédito através da propriedade portabilityId.
+      description: Endpoint responsável por consultar pedidos de portabilidade de crédito.
+      operationId: creditPortabilityGetPortabilitiesByPortabilityId
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/xFapiAuthDate'
+        - $ref: '#/components/parameters/xFapiCustomerIpAddress'
+        - $ref: '#/components/parameters/xFapiInteractionId'
+        - $ref: '#/components/parameters/xCustomerUserAgent'
+      responses:
+        '200':
+          $ref: '#/components/responses/OKResponsePortabilitiesByPortabilityId'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '423':
+          $ref: '#/components/responses/Locked'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+        '529':
+          $ref: '#/components/responses/SiteIsOverloaded'
+        default:
+          $ref: '#/components/responses/Default'
 
 components:
   schemas:
+    ResponsePortabilities:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            description: Conjunto de informações referentes à Proposta de Portabilidade de Crédito da Proponente para a Credora
+            required:
+              - customerContact
+              - institution
+              - contractIdentification
+              - proposedContract
+              - portabilityId
+              - status
+              - statusUpdateDateTime
+            properties:
+                portabilityId:
+                  description: "Código identificador do pedido de portabilidade realizado."
+                  type: string
+                  pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
+                  maxLength: 100
+                  minLength: 1
+                  example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+                contractIdentification:
+                  type: object
+                  required:
+                    - contractId
+                    - contractNumber
+                    - ipocCode
+                    - contractDate
+                    - paidInstalments
+                    - contractOutstandingBalance
+                  properties:
+                    contractId:
+                      type: string
+                      pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$
+                      maxLength: 100
+                      minLength: 1
+                      example: "92792126019929279212650822221989319252576"
+                      description: "Identifica de forma única o contrato da operação de crédito do cliente, mantendo as regras de imutabilidade dentro da instituição transmissora."
+                    contractNumber:
+                      type: string
+                      pattern:  ^[\w\W]{1,100}$
+                      maxLength: 100
+                      minLength: 1
+                      example: "1324926521496"
+                      description: "Número do contrato dado pela instituição contratante."
+                    ipocCode:
+                      type: string
+                      pattern:  ^[\w\W]{22,67}$
+                      maxLength: 67
+                      minLength: 22
+                      example: "92792126019929279212650822221989319252576"
+                      description: |
+                        Número padronizado do contrato - IPOC (Identificação Padronizada da Operação de Crédito). Segundo DOC 3040, composta por:
+  
+  
+                        CNPJ da instituição: 8 (oito) posições iniciais;
+                        Modalidade da operação: 4 (quatro) posições;
+                        Tipo do cliente: 1 (uma) posição( 1 = pessoa natural - CPF, 2= pessoa jurídica
+                        
+                        – CNPJ, 3 = pessoa física no exterior, 4 = pessoa jurídica no exterior, 5 = pessoa natural sem CPF e 6 = pessoa jurídica sem CNPJ);
+                        
+                        - Código do cliente: O número de posições varia conforme o tipo do cliente:
+                        Para clientes pessoa física com CPF (tipo de cliente = 1), informar as 11 (onze) posições do CPF;
+                        Para clientes pessoa jurídica com CNPJ (tipo de cliente = 2), informar as 8 (oito) posições iniciais do CNPJ;
+                        Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
+                        
+                        - Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
+      
     ResponseConcurrancyManagement:
       type: object
       required:
@@ -981,6 +1097,24 @@ components:
           scopes:
             loans: Escopo necessário para acesso à API Loans. O controle dos endpoints específicos é feito via permissions.
   responses:
+    OKResponsePortabilitiesByPortabilityId:
+      description: Dados dos contratos de empréstimos obtidos com sucesso.
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/jwt:
+          schema:
+            $ref: '#/components/schemas/ResponsePortabilities'
+    
     OKResponseConcurrancyManagement:
       description: Dados dos contratos de empréstimos obtidos com sucesso.
       headers:
