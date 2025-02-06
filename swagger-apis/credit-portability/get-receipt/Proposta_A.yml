@@ -285,7 +285,7 @@ components:
             nrp-consents: Consentimento para pagamentos sem redirecionamento.
   responses:
     ResponseReceipt:
-      description: Dados do recibo de quita;áo do contrato de empréstimo.
+      description: Dados do recibo de quitação do contrato de empréstimo.
       headers:
         x-fapi-interaction-id:
           description: |
