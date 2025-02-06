@@ -10,17 +10,19 @@ info:
 servers:
   - url: 'http://api.banco.com.br/portability/credit-portability/v1'
 tags:
-  - name: Payments
-    description: Bloco de endpoints representando a jornada de liquidação e confirmação de recebíveis
+  - name: Credit Portability
+    description:  |
+      Permite que usuários transfiram suas operações de crédito e arrendamento mercantil entre instituições financeiras em busca de melhores condições.
+
 paths:
-  /portabilities/{portabilityId}/payment/receipt:
+  /portabilities:
     get:
       tags:
-        - Payments
-      summary: Instituição Credora emite recibo de quitação do contrato de empréstimo.
-      description: Instituição Credora emite recibo de quitação do contrato de empréstimo.
+        - Credit Portability
+      summary: Consulta portabilida de crédito através da propriedade portabilityId.
+      description: Endpoint responsável por consultar pedidos de portabilidade de crédito.
+      operationId: creditPortabilityGetPortabilitiesByPortabilityId
       parameters:
-        - $ref: '#/components/parameters/portabilityId'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/xFapiAuthDate'
         - $ref: '#/components/parameters/xFapiCustomerIpAddress'
@@ -28,7 +30,7 @@ paths:
         - $ref: '#/components/parameters/xCustomerUserAgent'
       responses:
         '200':
-          $ref: '#/components/responses/ResponseReceipt'
+          $ref: '#/components/responses/OKResponsePortabilitiesByPortabilityId'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -55,64 +57,81 @@ paths:
           $ref: '#/components/responses/SiteIsOverloaded'
         default:
           $ref: '#/components/responses/Default'
-      security:
-      - NonRedirectAuthorizationCode:
-            - openid
-            - 'enrollment:enrollmentId'
-            - payments
-            - nrp-consents
 components:
   schemas:
-    ResponseReceipt:
+
+    ResponsePortabilities:
       type: object
       required:
         - data
-        - links
-        - meta
       properties:
         data:
-          type: object
-          minItems: 0
-          description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
-          required:
-            - portabilityId
-            - settlementDateTime
-            - settlementAmount
-            - transactionId
-
-          properties:
-              portabilityId:
-                type: string
-                pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
-                maxLength: 100
-                minLength: 1
-                example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
-                description: "Código identificador do pedido de portabilidade realizado."
-              settlementDateTime:
-                type: string
-                maxLength: 20
-                pattern: ^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$
-                example: "2020-07-21T08:30:00Z"
-                description: |
-                  Data e hora em que a instituição credora realizou a quitação do contrato de empréstimo.
-              settlementAmount:
-                type: string
-                format: double
-                pattern: '^\d{1,15}\.\d{2,4}$'
-                maxLength: 20
-                minLength: 4
-                example: '1000.0400'
-                description: Valor pago para liquidação do contrato de empréstimo.
-              transactionId:
-                type: string
-                pattern: '^(?!\s)[\w\W\s]*[^\s]$'
-                maxLength: 20
-                minLength: 1
-                example: 'STR20181108000000013'
-                description: |
-                  Identificador da transação utilizado para liquidar o contrato de empréstimo.
-                  
-                  No contexto de STR0047, utilizar o valor do campo de retorno NumCtrlSTR (Numero de Controle da STR)".
+          type: array
+          items:
+            type: object
+            description: Conjunto de informações referentes à Proposta de Portabilidade de Crédito da Proponente para a Credora
+            required:
+              - customerContact
+              - institution
+              - contractIdentification
+              - proposedContract
+              - portabilityId
+              - status
+              - statusUpdateDateTime
+            properties:
+                portabilityId:
+                  description: "Código identificador do pedido de portabilidade realizado."
+                  type: string
+                  pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
+                  maxLength: 100
+                  minLength: 1
+                  example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+                contractIdentification:
+                  type: object
+                  required:
+                    - contractId
+                    - contractNumber
+                    - ipocCode
+                    - contractDate
+                    - paidInstalments
+                    - contractOutstandingBalance
+                  properties:
+                    contractId:
+                      type: string
+                      pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$
+                      maxLength: 100
+                      minLength: 1
+                      example: "92792126019929279212650822221989319252576"
+                      description: "Identifica de forma única o contrato da operação de crédito do cliente, mantendo as regras de imutabilidade dentro da instituição transmissora."
+                    contractNumber:
+                      type: string
+                      pattern:  ^[\w\W]{1,100}$
+                      maxLength: 100
+                      minLength: 1
+                      example: "1324926521496"
+                      description: "Número do contrato dado pela instituição contratante."
+                    ipocCode:
+                      type: string
+                      pattern:  ^[\w\W]{22,67}$
+                      maxLength: 67
+                      minLength: 22
+                      example: "92792126019929279212650822221989319252576"
+                      description: |
+                        Número padronizado do contrato - IPOC (Identificação Padronizada da Operação de Crédito). Segundo DOC 3040, composta por:
+  
+  
+                        CNPJ da instituição: 8 (oito) posições iniciais;
+                        Modalidade da operação: 4 (quatro) posições;
+                        Tipo do cliente: 1 (uma) posição( 1 = pessoa natural - CPF, 2= pessoa jurídica
+                        
+                        – CNPJ, 3 = pessoa física no exterior, 4 = pessoa jurídica no exterior, 5 = pessoa natural sem CPF e 6 = pessoa jurídica sem CNPJ);
+                        
+                        - Código do cliente: O número de posições varia conforme o tipo do cliente:
+                        Para clientes pessoa física com CPF (tipo de cliente = 1), informar as 11 (onze) posições do CPF;
+                        Para clientes pessoa jurídica com CNPJ (tipo de cliente = 2), informar as 8 (oito) posições iniciais do CNPJ;
+                        Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
+                        
+                        - Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
         links:
           type: object
           description: Referências para outros recusos da API requisitada.
@@ -121,13 +140,52 @@ components:
           properties:
             self:
               type: string
-              format: uri
+              format: url
               maxLength: 2000
               description: URI completo que gerou a resposta atual.
               example: 'https://api.banco.com.br/open-banking/api/v1/resource'
+            first:
+              type: string
+              format: url
+              maxLength: 2000
+              description: URI da primeira página que originou essa lista de resultados. Restrição - Obrigatório quando não for a primeira página da resposta
+              example: 'https://api.banco.com.br/open-banking/api/v1/resource'
+            prev:
+              type: string
+              format: url
+              maxLength: 2000
+              description: "URI da página anterior dessa lista de resultados. Restrição - \tObrigatório quando não for a primeira página da resposta"
+              example: 'https://api.banco.com.br/open-banking/api/v1/resource'
+            next:
+              type: string
+              format: url
+              maxLength: 2000
+              description: URI da próxima página dessa lista de resultados. Restrição - Obrigatório quando não for a última página da resposta
+              example: 'https://api.banco.com.br/open-banking/api/v1/resource'
+            last:
+              type: string
+              format: url
+              maxLength: 2000
+              description: URI da última página dessa lista de resultados. Restrição - Obrigatório quando não for a última página da resposta
+              example: 'https://api.banco.com.br/open-banking/api/v1/resource'
         meta:
           type: object
+          description: Meta informações referente à API requisitada.
+          required:
+            - totalRecords
+            - totalPages
+            - requestDateTime
           properties:
+            totalRecords:
+              type: integer
+              format: int32
+              description: Número total de registros no resultado
+              example: 1
+            totalPages:
+              type: integer
+              format: int32
+              description: Número total de páginas no resultado
+              example: 1
             requestDateTime:
               description: 'Data e hora da consulta, conforme especificação RFC-3339, formato UTC.'
               type: string
@@ -174,6 +232,154 @@ components:
               maxLength: 20
               format: date-time
               example: '2021-05-21T08:30:00Z'
+    
+    LoansContractInterestRate:
+      type: object
+      description: Objeto que traz o conjunto de informações necessárias para demonstrar a composição das taxas de juros remuneratórios da Modalidade de crédito
+      required:
+        - taxType
+        - interestRateType
+        - taxPeriodicity
+        - calculation
+        - referentialRateIndexerType
+        - preFixedRate
+        - postFixedRate
+      properties:
+        taxType:
+          type: string
+          description: |
+            "Tipo de Taxa (vide  Enum)
+            - NOMINAL (taxa nominal é uma taxa de juros em que a unidade referencial não coincide com a unidade de tempo da capitalização. Ela é sempre fornecida em termos anuais, e seus períodos de capitalização podem ser diários, mensais, trimestrais ou semestrais. p.ex. Uma taxa de 12% ao ano com capitalização mensal)
+            - EFETIVA (É a taxa de juros em que a unidade referencial coincide com a unidade de tempo da capitalização. Como as unidades de medida de tempo da taxa de juros e dos períodos de capitalização são iguais, usa-se exemplos simples como 1% ao mês, 60% ao ano)"
+          enum:
+            - NOMINAL
+            - EFETIVA
+          example: EFETIVA
+        interestRateType:
+          type: string
+          description: |
+            "Tipo de Juros  (vide  Enum)
+            - SIMPLES (aplicada/cobrada sempre sobre o capital inicial, que é o valor emprestado/investido. Não há cobrança de juros sobre juros acumulados no(s) período(s) anterior(es). Exemplo: em um empréstimo de R$1.000, com taxa de juros simples de 8% a.a., com duração de 2 anos, o total de juros será R$80 no primeiro ano e R$ 80 no segundo ano. Ao final do contrato, o tomador irá devolver o principal e os juros simples de cada ano: R$1.000+R$80+R$80=R$1.160)
+            - COMPOSTO (para cada período do contrato (diário, mensal, anual etc.), há um “novo capital” para a cobrança da taxa de juros contratada. Esse “novo capital” é a soma do capital e do juro cobrado no período anterior. Exemplo: em um empréstimo de R$1.000, com taxa de juros composta de 8% a.a., com duração de 2 anos, o total de juros será R$80 no primeiro ano. No segundo ano, os juros vão ser somados ao capital (R$1.000 + R$ 80 = R$ 1.080), resultando em juros de R$ 86 (8%de R$ 1.080))"
+          enum:
+            - SIMPLES
+            - COMPOSTO
+          example: SIMPLES
+        EnumContractReferentialRateIndexerSubType:
+          type: string
+          description: |
+            "Sub tipos de taxas referenciais ou indexadores, conforme Anexo 5: Taxa referencial ou Indexador (Indx), do Documento 3040"
+          enum:
+            - SEM_SUB_TIPO_INDEXADOR
+            - PRE_FIXADO
+            - TR_TBF
+            - TJLP
+            - LIBOR
+            - TLP
+            - OUTRAS_TAXAS_POS_FIXADAS
+            - CDI
+            - SELIC
+            - OUTRAS_TAXAS_FLUTUANTES
+            - IGPM
+            - IPCA
+            - IPCC
+            - OUTROS_INDICES_PRECO
+            - TCR_PRE
+            - TCR_POS
+            - TRFC_PRE
+            - TRFC_POS
+            - OUTROS_INDEXADORES
+          example: TJLP
+        taxPeriodicity:
+          type: string
+          description: |
+            "Periodicidade da taxa . (Vide  Enum)
+            a.m - ao mês
+            a.a. - ao ano"
+          enum:
+            - AM
+            - AA
+          example: AA
+        calculation:
+          type: string
+          description: Base de cálculo
+          enum:
+            - 21/252
+            - 30/360
+            - 30/365
+          example: 21/252
+        referentialRateIndexerType:
+          type: string
+          description: |
+            "Tipos de taxas referenciais ou indexadores, conforme Anexo 5: Taxa referencial ou Indexador (Indx), do Documento 3040"
+          enum:
+            - SEM_TIPO_INDEXADOR
+            - PRE_FIXADO
+            - POS_FIXADO
+            - FLUTUANTES
+            - INDICES_PRECOS
+            - CREDITO_RURAL
+            - OUTROS_INDEXADORES
+          example: PRE_FIXADO
+        referentialRateIndexerSubType:
+          type: string
+          description: |
+            "Sub tipos de taxas referenciais ou indexadores, conforme Anexo 5: Taxa referencial ou Indexador (Indx), do Documento 3040"
+          enum:
+            - SEM_SUB_TIPO_INDEXADOR
+            - PRE_FIXADO
+            - TR_TBF
+            - TJLP
+            - LIBOR
+            - TLP
+            - OUTRAS_TAXAS_POS_FIXADAS
+            - CDI
+            - SELIC
+            - OUTRAS_TAXAS_FLUTUANTES
+            - IGPM
+            - IPCA
+            - IPCC
+            - OUTROS_INDICES_PRECO
+            - TCR_PRE
+            - TCR_POS
+            - TRFC_PRE
+            - TRFC_POS
+            - OUTROS_INDE
+        referentialRateIndexerAdditionalInfo:
+          type: string
+          description: |
+            Campo livre para complementar a informação relativa ao Tipo de taxa referencial ou indexador.
+            [Restrição] Obrigatório para complementar a informação relativa ao Tipo de taxa referencial ou indexador, quando selecionada o tipo ou subtipo OUTRO.
+          maxLength: 140
+          pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+          example: Informações adicionais
+        preFixedRate:
+          type: string
+          pattern: '^\d{1,2}\.\d{6}$'
+          format: double
+          maxLength: 9
+          minLength: 8
+          example: '0.600000'
+          description: |
+            Taxa pré fixada aplicada sob o contrato da modalidade crédito. p.ex. 0.014500. O preenchimento deve respeitar as 6 casas decimais, mesmo que venham preenchidas com zeros(representação de porcentagem p.ex: 0.150000. Este valor representa 15%. O valor 1 representa 100%). Preencher o campo não aplicável ao contrato com zeros, seguindo o pattern (0.000000).
+        postFixedRate:
+          type: string
+          pattern: '^\d{1,2}\.\d{6}$'
+          format: double
+          maxLength: 9
+          minLength: 8
+          description: |
+            Taxa pós fixada aplicada sob o contrato da modalidade crédito. p.ex. 0.0045 .O preenchimento deve respeitar as 6 casas decimais, mesmo que venham preenchidas com zeros (representação de porcentagem p.ex: 0.1500. Este valor representa 15%. O valor 1 representa 100%). Preencher o campo não aplicável ao contrato com zeros, seguindo o pattern (0.000000)
+          example: '0.550000'
+        additionalInfo:
+          type: string
+          maxLength: 1200
+          pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+          example: Informações adicionais
+          description: |
+            Texto com informações adicionais sobre a composição das taxas de juros pactuadas. 
+
+            [Restrição] Caso a instituição possua a informação para compartilhamento, esta deverá ser informada.
     XV:
       type: string
       format: uuid
@@ -186,6 +392,7 @@ components:
       minLength: 1
       maxLength: 36
       example: d78fc4e5-37ca-4da3-adf2-9b082bf92280
+
   parameters:
     Authorization:
       name: Authorization
@@ -198,15 +405,6 @@ components:
         maxLength: 2048
     portabilityId:
       name: portabilityId
-      in: path
-      description: Identificador do pedido de portabilidade de crédito.
-      required: true
-      schema:
-        type: string
-        pattern: '^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$'
-        maxLength: 100
-    contractId:
-      name: contractId
       in: path
       description: Identificador do contrato para todos os tipos de operação de crédito.
       required: true
@@ -265,7 +463,7 @@ components:
     xFapiCustomerIpAddress:
       name: x-fapi-customer-ip-address
       in: header
-      description: O endereço IP do usuário se estiver atualmente logado com a instituição proponente.
+      description: O endereço IP do usuário se estiver atualmente logado com o receptor.
       required: false
       schema:
         type: string
@@ -285,21 +483,21 @@ components:
         maxLength: 36
         example: d78fc4e5-37ca-4da3-adf2-9b082bf92280
   securitySchemes:
-    NonRedirectAuthorizationCode:
+    OpenId:
+      type: openIdConnect
+      openIdConnectUrl: 'https://auth.mockbank.poc.raidiam.io/.well-known/openid-configuration'
+    OAuth2Security:
       type: oauth2
-      description: Fluxo OAuth necessário para que a Instituição Proponente possa solicitar o pedido de portabilidade sem redirecionamento.
+      description: Fluxo OAuth necessário para que a receptora tenha acesso aos dados na instituição transmissora. Requer o processo de redirecionamento e autenticação do usuário a que se referem os dados.
       flows:
         authorizationCode:
-          authorizationUrl: 'https://authserver.example/token'
+          authorizationUrl: 'https://authserver.example/authorization'
           tokenUrl: 'https://authserver.example/token'
           scopes:
-            payments: Escopo necessário para acesso à  API Payment Initiation.
-            openid: Indica que a autorização está sendo realizada utilizando o protocolo definido pela openid.
-            'enrollment:enrollmentId': Permite realizar atualização de um registro com a permissão do cliente.
-            nrp-consents: Consentimento para pagamentos sem redirecionamento.
+            loans: Escopo necessário para acesso à API Loans. O controle dos endpoints específicos é feito via permissions.
   responses:
-    ResponseReceipt:
-      description: Dados do recibo de quitação do contrato de empréstimo.
+    OKResponsePortabilitiesByPortabilityId:
+      description: Dados dos contratos de empréstimos obtidos com sucesso.
       headers:
         x-fapi-interaction-id:
           description: |
@@ -314,7 +512,8 @@ components:
       content:
         application/jwt:
           schema:
-            $ref: '#/components/schemas/ResponseReceipt'
+            $ref: '#/components/schemas/ResponsePortabilities'
+
     BadRequest:
       description: 'A requisição foi malformada, omitindo atributos obrigatórios, seja no payload ou através de atributos na URL.'
       headers:
@@ -323,11 +522,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -340,11 +534,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -357,11 +546,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -374,17 +558,18 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
             $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
     Locked:
       description: Locked
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
       content:
         application/json; charset=utf-8:
           schema:
@@ -397,11 +582,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -414,11 +594,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -431,11 +606,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -448,11 +618,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -465,11 +630,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -482,11 +642,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -499,11 +654,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
@@ -516,11 +666,6 @@ components:
             Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
           schema:
             $ref: '#/components/schemas/XFapiInteractionId'
-        x-v:
-          description: |
-            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
-          schema:
-            $ref: '#/components/schemas/XV'
       content:
         application/json; charset=utf-8:
           schema:
