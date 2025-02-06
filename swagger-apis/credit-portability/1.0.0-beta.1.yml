@@ -59,6 +59,62 @@ paths:
           $ref: '#/components/responses/SiteIsOverloaded'
         default:
           $ref: '#/components/responses/Default'
+          
+  /portabilities:
+    post:
+      tags:
+        - Credit Portability
+      summary: Realiza pedido de portabilidade de crédito para um determinado contrato junto a instituição credora
+      description: Solicitação de portabilidade de crédito via OFB.
+      parameters:
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/xFapiAuthDate'
+        - $ref: '#/components/parameters/xFapiCustomerIpAddress'
+        - $ref: '#/components/parameters/xFapiInteractionId'
+        - $ref: '#/components/parameters/xCustomerUserAgent'
+      requestBody:
+        content:
+          application/jwt:
+            schema:
+              $ref: '#/components/schemas/RequestCreditPortability'
+        description: Payload para o pedido de portabilidade de crédito.
+        required: true
+      responses:
+        '202':
+          $ref: '#/components/responses/POSTResponseCreditPortability'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '423':
+          $ref: '#/components/responses/Locked'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+        '529':
+          $ref: '#/components/responses/SiteIsOverloaded'
+        default:
+          $ref: '#/components/responses/Default'
+      security:
+        - NonRedirectAuthorizationCode:
+            - openid
+            - 'enrollment:enrollmentId'
+            - payments
+            - nrp-consents
+
 components:
   schemas:
     ResponseConcurrancyManagement:
@@ -174,26 +230,23 @@ components:
           $ref: '#/components/schemas/Links'
         meta:
           $ref: '#/components/schemas/Meta'
-
     POSTResponseCreditPortability:
       type: object
       required:
         - data
       properties:
         data:
-          type: array
+          type: object
           minItems: 0
           description: Conjunto de informações de contratos de empréstimos/financiamentos mantidos pelo cliente na instituição credora e para os quais ele tenha fornecido consentimento
-          items:
-            type: object
-            required:
+          required:
             - contractId
             - contractNumber
             - ipocCode
             - portability
             - productType
             - productSubType
-            properties:
+          properties:
               portabilityId:
                 type: string
                 pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
@@ -215,10 +268,17 @@ components:
                   - ACCEPTED_WITH_CHANGE
                   - CANCELED
               strCode:
-                type: string
-                enum:
-                  - 12314564654987987
-                description: "Tipo da modalidade de crédito contratada, conforme circular 4.015 e descrição do DOC3040 do SCR)."
+                type: object
+                required:
+                  - isbpIfCredora
+                  - agency
+                properties:
+                  isbpIfCredora:
+                    type: number
+                    description: Número do ISBP da Instituição credora
+                  agency:
+                    type: number
+                    description: Número da Agência creditada
         meta:
           type: object
           properties:
@@ -228,6 +288,381 @@ components:
               maxLength: 20
               format: date-time
               example: '2021-05-21T08:30:00Z'
+    RequestCreditPortability:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: Conjunto de informações de contratos de empréstimos/financiamentos mantidos pelo cliente na instituição credora e para os quais ele tenha fornecido consentimento
+          required:
+            - customerContact
+            - institution
+            - contractIdentification
+            - proposedContract
+          properties:
+              customerContact:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  required:
+                    - type
+                    - value 
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - TELEFONE
+                        - EMAIL
+                      description: "Tipo do contato do cliente."
+                    value:
+                      type: string
+                      pattern: ^([1-9]{2}(?:[2-8]|9[0-9])[0-9]{3}[0-9]{4})|([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})$
+                      example: "11999999999"
+              institution:
+                type: object
+                required:
+                  - creditor
+                  - proposing
+                properties:
+                  creditor:
+                    type: object
+                    required:
+                      - companyName
+                      - companyCnpj
+                    properties:
+                      companyName:
+                        type: string
+                        pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                        maxLength: 80
+                        example: Instituição Credora               
+                        description: 'Nome da Instituição Credora.'
+                      companyCnpj:
+                        type: string
+                        pattern: '\d{14}$'
+                        maxLength: 14
+                        example: '21128159000166'
+                        description: 'Número completo do CNPJ da instituição responsável pelo Cadastro - o CNPJ corresponde ao número de inscrição no Cadastro de Pessoa Jurídica. Deve-se ter apenas os números do CNPJ, sem máscara.'
+                  proposing:
+                    type: object
+                    required:
+                      - companyName
+                      - companyCnpj
+                    properties:
+                      companyName:
+                        type: string
+                        pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                        maxLength: 80
+                        example: Instituição Proponente
+                        description: 'Nome da Instituição Proponente'
+                      companyCnpj:
+                        type: string
+                        pattern: '\d{14}$'
+                        maxLength: 14
+                        example: '21128159000166'
+                        description: 'Número completo do CNPJ da instituição responsável pelo Cadastro - o CNPJ corresponde ao número de inscrição no Cadastro de Pessoa Jurídica. Deve-se ter apenas os números do CNPJ, sem máscara.'
+                      contact:
+                        type: array
+                        minItems: 1
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - EMAIL
+                                - TELEFONE
+                              description: "Tipo do contato da Instituição Proponente."
+                            value:
+                              type: string
+                              pattern: ^([1-9]{2}(?:[2-8]|9[0-9])[0-9]{3}[0-9]{4})|([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})$
+                              example: "contato@instituicao_proponente.com.br"
+              contractIdentification:
+                type: object
+                required:
+                  - contractId
+                  - contractNumber
+                  - ipocCode
+                  - contractDate
+                  - paidInstalments
+                  - contractOutstandingBalance
+                properties:
+                  contractId:
+                    type: string
+                    pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{0,99}$
+                    maxLength: 100
+                    minLength: 1
+                    example: "92792126019929279212650822221989319252576"
+                    description: "Identifica de forma única o contrato da operação de crédito do cliente, mantendo as regras de imutabilidade dentro da instituição transmissora."
+                  contractNumber:
+                    type: string
+                    pattern:  ^[\w\W]{1,100}$
+                    maxLength: 100
+                    minLength: 1
+                    example: "1324926521496"
+                    description: "Número do contrato dado pela instituição contratante."
+                  ipocCode:
+                    type: string
+                    pattern:  ^[\w\W]{22,67}$
+                    maxLength: 67
+                    minLength: 22
+                    example: "92792126019929279212650822221989319252576"
+                    description: |
+                      Número padronizado do contrato - IPOC (Identificação Padronizada da Operação de Crédito). Segundo DOC 3040, composta por:
+
+
+                      CNPJ da instituição: 8 (oito) posições iniciais;
+                      Modalidade da operação: 4 (quatro) posições;
+                      Tipo do cliente: 1 (uma) posição( 1 = pessoa natural - CPF, 2= pessoa jurídica
+                      
+                      – CNPJ, 3 = pessoa física no exterior, 4 = pessoa jurídica no exterior, 5 = pessoa natural sem CPF e 6 = pessoa jurídica sem CNPJ);
+                      
+                      - Código do cliente: O número de posições varia conforme o tipo do cliente:
+                      Para clientes pessoa física com CPF (tipo de cliente = 1), informar as 11 (onze) posições do CPF;
+                      Para clientes pessoa jurídica com CNPJ (tipo de cliente = 2), informar as 8 (oito) posições iniciais do CNPJ;
+                      Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
+                      
+                      - Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
+                  productName:
+                    type: string
+                    maxLength: 140
+                    pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                    example: Crédito Pessoal Consignado
+                    description: |
+                      Denominação/Identificação do nome da Modalidade da Operação de Crédito divulgado ao cliente
+                  productType:
+                    type: string
+                    description: 'Tipo da modalidade de crédito contratada, conforme  circular 4.015 e descrição do DOC3040 do SCR).'
+                    enum:
+                      - EMPRESTIMOS
+                    example: EMPRESTIMOS
+                  productSubType:
+                    type: string
+                    description: |
+                      Denominação/Identificação do sub tipo da garantia que avaliza a Modalidade da Operação de Crédito contratada (Doc 3040, Anexo 12).
+                    enum:
+                      - ACOES_DEBENTURES
+                      - ACORDOS_COMPENSACAO_LIQUIDACAO_OBRIGACOES
+                      - APLICACOES_FINANCEIRAS_RENDA_FIXA
+                      - APLICACOES_FINANCEIRAS_RENDA_VARIAVEL
+                      - APOLICES_CREDITO_EXPORTACAO
+                      - CCR_CONVENIO_CREDITOS_RECIPROCOS
+                      - CHEQUES
+                      - CIVIL
+                      - DIREITOS_SOBRE_ALUGUEIS
+                      - DEPOSITOS_A_VISTA_A_PRAZO_POUPANCA_OURO_TITULOS_PUBLICOS_FEDERAIS_ART_36
+                      - DEPOSITO_TITULOS_EMITIDOS_ENTIDADES_ART_23
+                      - DUPLICATAS
+                      - EMD_ENTIDADES_MULTILATERAIS_DESENVOLVIMENTO_ART_37
+                      - EQUIPAMENTOS
+                      - ESTADUAL_OU_DISTRITAL
+                      - FATURA_CARTAO_CREDITO
+                      - FEDERAL
+                      - FCVS_FUNDO_COMPENSACAO_VARIACOES_SALARIAIS
+                      - FGI_FUNDO_GARANTIDOR_INVESTIMENTOS
+                      - FGPC_FUNDO_GARANTIA_PROMOCAO_COMPETIT
+                      - FGTS_FUNDO_GARANTIA_TEMPO_SERVICO
+                      - FUNDO_GARANTIDOR_AVAL
+                      - GARANTIA_PRESTADA_FGPC_LEI_9531_ART_37
+                      - GARANTIA_PRESTADA_FUNDOS_QUAISQUER_OUTROS_MECANISMOS_COBERTURA_RISCO_CREDITO_ART_37
+                      - GARANTIA_PRESTADA_TESOURO_NACIONAL_OU_BACEN_ART_37_BENS_DIREITOS_INTEGRANTES_PATRIMONIO_AFETACAO
+                      - IMOVEIS
+                      - IMOVEIS_RESIDENCIAIS
+                      - MITIGADORAS
+                      - MUNICIPAL
+                      - NAO_MITIGADORAS
+                      - NOTAS_PROMISSORIAS_OUTROS_DIREITOS_CREDITO
+                      - OUTRAS
+                      - OUTROS
+                      - OUTROS_BENS
+                      - OUTROS_GRAUS
+                      - OUTROS_IMOVEIS
+                      - OUTROS_SEGUROS_ASSEMELHADOS
+                      - PESSOA_FISICA
+                      - PESSOA_FISICA_EXTERIOR
+                      - PESSOA_JURIDICA
+                      - PESSOA_JURIDICA_EXTERIOR
+                      - PRIMEIRO_GRAU_BENS_DIREITOS_INTEGRANTES_PATRIMONIO_AFETACAO
+                      - PRIMEIRO_GRAU_IMOVEIS_RESIDENCIAIS
+                      - PRIMEIRO_GRAU_OUTROS
+                      - PROAGRO
+                      - PRODUTOS_AGROPECUARIOS_COM_WARRANT
+                      - PRODUTOS_AGROPECUARIOS_SEM_WARRANT
+                      - SBCE_SOCIEDADE_BRASILEIRA_CREDITO_EXPORTAÇÃO
+                      - SEGURO_RURAL
+                      - SEM_SUB_TIPO_GARANTIA
+                      - TRIBUTOS_RECEITAS_ORCAMENTARIAS
+                      - VEICULOS
+                      - VEICULOS_AUTOMOTORES
+                    example: NOTAS_PROMISSORIAS_OUTROS_DIREITOS_CREDITO
+                  contractDate:
+                    type: string
+                    format: date
+                    maxLength: 10
+                    pattern: '^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])$'
+                    example: '2018-01-05'
+                    description: Data de contratação da operação de crédito. Especificação RFC-3339
+                  paidInstalments:
+                    type: number
+                    maximum: 2147483647
+                    example: 73
+                    description: Quantidade total de parcelas pagas do contrato referente à Modalidade de Crédito informada.
+                  contractOutstandingBalance:
+                    type: string
+                    format: double
+                    pattern: '^\d{1,15}\.\d{2,4}$'
+                    maxLength: 20
+                    minLength: 4
+                    example: '1000.0400'
+                    description: Valor necessário para o cliente liquidar a dívida.
+              proposedContract:
+                type: object
+                required:
+                  - interestRates
+                  - contractedFees
+                  - contractedFinanceCharges
+                  - digitalSignatureProof
+                properties:
+                  interestRates:
+                    type: array
+                    description: |
+                      Objeto que traz o conjunto de informações necessárias para demonstrar a composição das taxas de juros remuneratórios da Modalidade de crédito.  
+                      Caso o contrato não possua taxas de juros, deve ser compartilhada uma lista vazia. Caso o contrato possua uma taxa de juros com valor 0, deve ser compartilhado um objeto com o valor 0 de forma explícita.
+                    items:
+                      $ref: '#/components/schemas/LoansContractInterestRate'
+                    minItems: 0
+                  contractedFees:
+                    type: array
+                    description: Lista que traz as informações das tarifas pactuadas no contrato.
+                    items:
+                      type: object
+                      description: Objeto que traz o conjunto de informações necessárias para demonstrar a composição das taxas de juros remuneratórios da Modalidade de crédito
+                      required:
+                        - feeName
+                        - feeCode
+                        - feeChargeType
+                        - feeCharge
+                      properties:
+                        feeName:
+                          type: string
+                          maxLength: 140
+                          pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                          description: Denominação da Tarifa pactuada
+                          example: Renovação de cadastro
+                        feeCode:
+                          type: string
+                          maxLength: 140
+                          pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                          description: Sigla identificadora da tarifa pactuada
+                          example: CADASTRO
+                        feeChargeType:
+                          type: string
+                          description: Tipo de cobrança para a tarifa pactuada no contrato.
+                          enum:
+                            - UNICA
+                            - POR_PARCELA
+                          example: UNICA
+                        feeCharge:
+                          type: string
+                          description: |
+                            "Forma de cobrança relativa a tarifa pactuada no contrato. (Vide Enum)
+                            - Mínimo
+                            - Máximo
+                            - Fixo
+                            - Percentual"
+                          enum:
+                            - MINIMO
+                            - MAXIMO
+                            - FIXO
+                            - PERCENTUAL
+                          example: MINIMO
+                        feeAmount:
+                          type: string
+                          format: double
+                          pattern: '^\d{1,15}\.\d{2,4}$'
+                          maxLength: 20
+                          minLength: 4
+                          description: |
+                            Valor monetário da tarifa pactuada no contrato. 
+                
+                            [Restrição] Preenchimento obrigatório quando a forma de cobrança for diferente de Percentual.
+                          example: '100000.0400'
+                        feeRate:
+                          type: string
+                          pattern: '^\d{1}\.\d{6}$'
+                          format: double
+                          maxLength: 8
+                          minLength: 8
+                          description: |
+                            É o valor da tarifa em percentual pactuada no contrato.
+                
+                            [Restrição] Preenchimento obrigatório quando a forma de cobrança for Percentual.
+                          example: '0.062000'
+                    minItems: 0
+                  contractedFinanceCharges:
+                    type: array
+                    description: Lista que traz os encargos pactuados no contrato
+                    items:
+                      type: object
+                      description: Conjunto de informações referentes à identificação da operação de crédito
+                      required:
+                        - chargeType
+                      properties:
+                        chargeType:
+                          type: string
+                          description: Tipo de encargo pactuado no contrato.
+                          enum:
+                            - JUROS_REMUNERATORIOS_POR_ATRASO
+                            - MULTA_ATRASO_PAGAMENTO
+                            - JUROS_MORA_ATRASO
+                            - IOF_CONTRATACAO
+                            - IOF_POR_ATRASO
+                            - SEM_ENCARGO
+                            - OUTROS
+                          example: JUROS_REMUNERATORIOS_POR_ATRASO
+                        chargeAdditionalInfo:
+                          type: string
+                          maxLength: 140
+                          description: |
+                            Campo para informações adicionais.
+                
+                            [Restrição] Obrigatório se selecionada a opção 'OUTROS' em Tipo de encargo pactuado no contrato.
+                          pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                          example: Informações adicionais sobre encargos.
+                        chargeRate:
+                          type: string
+                          pattern: '^\d{1}\.\d{6}$'
+                          format: double
+                          maxLength: 8
+                          minLength: 8
+                          description: |
+                            Representa o valor do encargo em percentual pactuado no contrato.
+                
+                            O preenchimento deve respeitar as 6 casas decimais, mesmo que venham preenchidas com zeros(representação de porcentagem p.ex: 0.150000. Este valor representa 15%. O valor 1 representa 100%).
+                          example: '0.070000'
+                    minItems: 0
+                  digitalSignatureProof:
+                    type: object
+                    properties:
+                      documentId:
+                        type: string
+                        pattern: "^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$"
+                        maxLength: 100
+                        minLength: 1
+                        example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+                        description: "Código identificador do Documento assinado na instituição proponente."
+                      signatureDateTime:
+                        type: string
+                        maxLength: 20
+                        pattern: ^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$
+                        example: "2020-07-21T08:30:00Z"
+                        description: |
+                          Data e hora em que o contrato foi assinado pelo cliente  no canal digital da Instituição Proponente
+                    required:
+                      - documentId
+                      - signatureDateTime
     Meta:
       type: object
       description: Meta informações referente à API requisitada.
