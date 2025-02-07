@@ -10,15 +10,15 @@ info:
 servers:
   - url: 'http://api.banco.com.br/portability/credit-portability/v1'
 tags:
-  - name: Payments
-    description:  Notifica a Instiuição Credora que a liquidação da portabilidade de crédito foi realizada,e a Instituição Proponente estará aguardando a confirmação e o recibo de quitação do contrato de empréstimo.
+  - name: Credit Portability
+    description:  Solicitação da portabilidade de crédito.
 paths:
   /portabilities/{portabilityId}/cancel:
     patch:
       tags:
-        - Payments
-      summary: Comunica a Instituição Credora a respeito da liquidação da portabilidade de crédito.
-      description: Comunica a Instituição Credora a respeito da liquidação da portabilidade de crédito.
+        - Credit Portability
+      summary: Comunica a Instituição Credora a respeito do cancelamento da portabilidade de crédito.
+      description: Comunica a Instituição Credora a respeito do cancelamento da portabilidade de crédito.
       parameters:
         - $ref: '#/components/parameters/portabilityId'
         - $ref: '#/components/parameters/Authorization'
@@ -31,7 +31,7 @@ paths:
           application/jwt:
             schema:
               $ref: '#/components/schemas/RequestCancelingCreditPortability'
-        description: Payload para comunicar a liquidação efetuada pela proponente a credora e iniciar a proxima etapa do fluxo de portabilidade de crédito.
+        description: Payload para comunicar a Instituição Credora a respeito do cancelamento da portabilidade de crédito.
         required: true
       responses:
         '200':
@@ -62,6 +62,12 @@ paths:
           $ref: '#/components/responses/SiteIsOverloaded'
         default:
           $ref: '#/components/responses/Default'
+      security:
+      - NonRedirectAuthorizationCode:
+            - openid
+            - 'enrollment:enrollmentId'
+            - payments
+            - nrp-consents
 components:
   schemas:
     RequestCancelingCreditPortability:
@@ -73,10 +79,8 @@ components:
           type: object
           description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
           required:
-            - portabilityId
-            - paymentDateTime
-            - paymentAmount
-            - transactionId
+            - status
+            - statusReason
 
           properties:
               status:
@@ -84,19 +88,19 @@ components:
                 description: |
                   Informação sobre o status de um pedido de portabilidade de crédito, onde:
                   
+                  `REJECTED` - Indica que o pedido de portabilidade de crédito foi rejeitado, seja porque o cliente aceitou a contraproposta, ou porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  
                   `CANCELED` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
 
                 enum:
                   - CANCELED
+                  - REJECTED
               statusReason:
                 type: object
                 required: 
                   - reasonType
                 description: |
                   Motivo de recusa do pedido de portabilidade
-                  
-                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELADO` ou `PAYMENT_ISSUE`
-
                 properties: 
                   reasonType:
                     description: |
@@ -104,15 +108,25 @@ components:
                       
                       `CANCELADO_PELO_CLIENTE` - Cliente desiste do pedido da portabilidade 
                       
+                      `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente 
+                      
+                      `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas 
+                      
+                      `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
                     type: string
                     enum:
                       - CANCELADO_PELO_CLIENTE
+                      - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
+                      - POLITICA_DE_CREDITO
+                      - OUTROS
                     
                   reasonTypeAdditionalInfo: 
                     description: |
                       Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
                       Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
                       para discussão e mapeamento em futuras versões.
+
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
                     type: string
                     maxLength: 144
                     pattern: '^(?!\s)[\w\W\s]*[^\s]$'
@@ -139,6 +153,8 @@ components:
                 description: |
                   Informação sobre o status de um pedido de portabilidade de crédito, onde:
                   
+                  `REJECTED` - Indica que o pedido de portabilidade de crédito foi rejeitado, seja porque o cliente aceitou a contraproposta, ou porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  
                   `CANCELED` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
 
                 enum:
@@ -157,7 +173,7 @@ components:
                 description: |
                   Motivo de recusa do pedido de portabilidade
                   
-                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELADO` ou `PAYMENT_ISSUE`
+                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELED` ou `PAYMENT_ISSUE`
 
                 properties: 
                   reasonType:
@@ -166,15 +182,25 @@ components:
                       
                       `CANCELADO_PELO_CLIENTE` - Cliente desiste do pedido da portabilidade 
                       
+                      `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente 
+                      
+                      `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas 
+                      
+                      `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
                     type: string
                     enum:
                       - CANCELADO_PELO_CLIENTE
+                      - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
+                      - POLITICA_DE_CREDITO
+                      - OUTROS
                     
                   reasonTypeAdditionalInfo: 
                     description: |
                       Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
                       Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
                       para discussão e mapeamento em futuras versões.
+
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
                     type: string
                     maxLength: 144
                     pattern: '^(?!\s)[\w\W\s]*[^\s]$'
@@ -353,7 +379,7 @@ components:
             nrp-consents: Consentimento para pagamentos sem redirecionamento.
   responses:
     ResponseCancelingCreditPortability:
-      description: Dados dos contratos de empréstimos obtidos com sucesso.
+      description: Dados da confirmação do cancelamento da portabilidade de crédito.
       headers:
         x-fapi-interaction-id:
           description: |
