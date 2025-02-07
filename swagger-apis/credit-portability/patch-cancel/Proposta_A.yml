@@ -80,29 +80,29 @@ components:
           description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
           required:
             - status
-            - statusReason
+            - reason
 
           properties:
-              status:
+              rejectedBy:
                 type: string
                 description: |
-                  Informação sobre o status de um pedido de portabilidade de crédito, onde:
+                  Informar usuário responsável pela rejeição da proposta, onde:
                   
-                  `REJECTED` - Indica que o pedido de portabilidade de crédito foi rejeitado, seja porque o cliente aceitou a contraproposta, ou porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  `PROPONETE` - Indica que o pedido de portabilidade de crédito foi rejeitado pela proponente, seja porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
                   
-                  `CANCELED` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
+                  `USUARIO` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
 
                 enum:
-                  - CANCELED
-                  - REJECTED
-              statusReason:
+                  - PROPONENTE
+                  - USUARIO
+              reason:
                 type: object
                 required: 
-                  - reasonType
+                  - type
                 description: |
                   Motivo de recusa do pedido de portabilidade
                 properties: 
-                  reasonType:
+                  type:
                     description: |
                       Motivo de recusa do pedido de portabilidade, onde:
                       
@@ -120,7 +120,7 @@ components:
                       - POLITICA_DE_CREDITO
                       - OUTROS
                     
-                  reasonTypeAdditionalInfo: 
+                  typeAdditionalInfo: 
                     description: |
                       Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
                       Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
@@ -142,41 +142,30 @@ components:
           minItems: 0
           description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
           required:
-            - portabilityId
-            - paymentDateTime
-            - paymentAmount
-            - transactionId
+            - status
+            - reason
 
           properties:
-              status:
+              rejectedBy:
                 type: string
                 description: |
-                  Informação sobre o status de um pedido de portabilidade de crédito, onde:
+                  Informar usuário responsável pela rejeição da proposta, onde:
                   
-                  `REJECTED` - Indica que o pedido de portabilidade de crédito foi rejeitado, seja porque o cliente aceitou a contraproposta, ou porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  `PROPONETE` - Indica que o pedido de portabilidade de crédito foi rejeitado pela proponente, seja porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
                   
-                  `CANCELED` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
+                  `USUARIO` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
 
                 enum:
-                  - CANCELED
-              statusUpdateDateTime:
-                type: string
-                maxLength: 20
-                pattern: ^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$
-                example: "2020-07-21T08:30:00Z"
-                description: |
-                  Data e hora em que o contrato teve o status atualizado. Uma string com data e hora conforme especificação RFC-3339, sempre com a utilização de timezone UTC(UTC time format).
-              statusReason:
+                  - PROPONENTE
+                  - USUARIO
+              reason:
                 type: object
                 required: 
-                  - reasonType
+                  - type
                 description: |
                   Motivo de recusa do pedido de portabilidade
-                  
-                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `status` for igual a `REJECTED` ou `CANCELED` ou `PAYMENT_ISSUE`
-
                 properties: 
-                  reasonType:
+                  type:
                     description: |
                       Motivo de recusa do pedido de portabilidade, onde:
                       
@@ -194,7 +183,7 @@ components:
                       - POLITICA_DE_CREDITO
                       - OUTROS
                     
-                  reasonTypeAdditionalInfo: 
+                  typeAdditionalInfo: 
                     description: |
                       Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
                       Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
