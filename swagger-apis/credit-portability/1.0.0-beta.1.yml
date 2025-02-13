@@ -33,7 +33,7 @@ paths:
         - $ref: '#/components/parameters/pagination-key'
       responses:
         '200':
-          $ref: '#/components/responses/OKResponseConcurrancyManagement'
+          $ref: '#/components/responses/ResponseConcurrancyManagement'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -84,53 +84,6 @@ paths:
       responses:
         '202':
           $ref: '#/components/responses/AcceptedPOSTResponseCreditPortability'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
-        '406':
-          $ref: '#/components/responses/NotAcceptable'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '423':
-          $ref: '#/components/responses/Locked'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-        '504':
-          $ref: '#/components/responses/GatewayTimeout'
-        '529':
-          $ref: '#/components/responses/SiteIsOverloaded'
-        default:
-          $ref: '#/components/responses/Default'
-      security:
-        - NonRedirectAuthorizationCode:
-            - openid
-            - 'enrollment:enrollmentId'
-            - payments
-            - nrp-consents
-    get:
-      tags:
-        - Credit Portability
-      summary: Consulta portabilida de crédito através da propriedade portabilityId.
-      description: Endpoint responsável por consultar pedidos de portabilidade de crédito.
-      operationId: creditPortabilityGetPortabilities
-      parameters:
-        - $ref: '#/components/parameters/Authorization'
-        - $ref: '#/components/parameters/xFapiAuthDate'
-        - $ref: '#/components/parameters/xFapiCustomerIpAddress'
-        - $ref: '#/components/parameters/xFapiInteractionId'
-        - $ref: '#/components/parameters/xCustomerUserAgent'
-      responses:
-        '200':
-          $ref: '#/components/responses/OKResponsePortabilitiesByPortabilityId'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -251,12 +204,6 @@ paths:
           $ref: '#/components/responses/SiteIsOverloaded'
         default:
           $ref: '#/components/responses/Default'
-      security:
-      - NonRedirectAuthorizationCode:
-            - openid
-            - 'enrollment:enrollmentId'
-            - payments
-            - nrp-consents
   /account-data:
     get:
       tags:
@@ -323,17 +270,25 @@ components:
                 - accountNumber
               properties:
                 ispb:
-                  type: number
-                  example: 68741
+                  type: string
+                  pattern: '^[0-9]{8}$'
+                  example: 22896431
                   description: Número do ISPB da Instituição credora
-                agency:
-                  type: number
+                branchCode:
+                  type: string
+                  pattern: '^\d{4}$'
                   description: Número da Agência creditada
-                  example: 65784
-                accountNumber:
-                  type: number
+                  example: 0001
+                number:
+                  type: string
+                  pattern: '^\d{8,20}$'
                   description: Número da conta bancária da credora
-                  example: 15324
+                  example: 12345678
+                checkDigit:
+                  type: string
+                  pattern: '^\w{1}$'
+                  example: 'x'
+                  description: Dígito da conta
         links:
           $ref: '#/components/schemas/Links'
         meta:
@@ -369,13 +324,28 @@ components:
                 description: |
                   Data e hora em que o pagamento a instituição credora foi realizado pela instituição proponente.
               paymentAmount:
-                type: string
-                format: double
-                pattern: '^\d{1,15}\.\d{2,4}$'
-                maxLength: 20
-                minLength: 4
-                example: '1000.0400'
-                description: Valor pago para liquidação do contrato de empréstimo.
+                type: object
+                minItems: 1
+                description: Objeto para representar o valor pago para liquidação do contrato de empréstimo.
+                required:
+                  - amount
+                  - currency
+                properties:
+                  amount:
+                    type: string
+                    format: double
+                    pattern: '^\d{1,15}\.\d{2,4}$'
+                    maxLength: 20
+                    minLength: 4
+                    example: '1000.0400'
+                    description: Valor pago para liquidação do contrato de empréstimo.
+                  currency:
+                    type: string
+                    maxLength: 3
+                    minLength: 3
+                    pattern: '^(\w{3}){1}$'
+                    example: BRL
+                    description: Moeda referenciada ao campo `amount`, segundo modelo ISO-4217
               transactionId:
                 type: string
                 pattern: '^(?!\s)[\w\W\s]*[^\s]$'
@@ -418,13 +388,28 @@ components:
                 description: |
                   Data e hora em que o pagamento a instituição credora foi realizado pela instituição proponente.
               paymentAmount:
-                type: string
-                format: double
-                pattern: '^\d{1,15}\.\d{2,4}$'
-                maxLength: 20
-                minLength: 4
-                example: '1000.0400'
-                description: Valor pago para liquidação do contrato de empréstimo.
+                type: object
+                minItems: 1
+                description: Objeto para representar o valor pago para liquidação do contrato de empréstimo.
+                required:
+                  - amount
+                  - currency
+                properties:
+                  amount:
+                    type: string
+                    format: double
+                    pattern: '^\d{1,15}\.\d{2,4}$'
+                    maxLength: 20
+                    minLength: 4
+                    example: '1000.0400'
+                    description: Valor pago para liquidação do contrato de empréstimo.
+                  currency:
+                    type: string
+                    maxLength: 3
+                    minLength: 3
+                    pattern: '^(\w{3}){1}$'
+                    example: BRL
+                    description: Moeda referenciada ao campo `amount`, segundo modelo ISO-4217
               transactionId:
                 type: string
                 pattern: '^(?!\s)[\w\W\s]*[^\s]$'
@@ -1918,9 +1903,9 @@ components:
       content:
         application/jwt:
           schema:
-            $ref: '#/components/schemas/ResponsePortabilities'
+            $ref: '#/components/schemas/ResponsePortabilitiesByPortabilityId'
     
-    OKResponseConcurrancyManagement:
+    ResponseConcurrancyManagement:
       description: Dados dos contratos de empréstimos obtidos com sucesso.
       headers:
         x-fapi-interaction-id:
@@ -1933,6 +1918,10 @@ components:
             Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
           schema:
             $ref: '#/components/schemas/XV'
+      content:
+        application/jwt:
+          schema:
+            $ref: '#/components/schemas/ResponseConcurrancyManagement'   
     AcceptedPOSTResponseCreditPortability:
       description: Dados dos contratos de empréstimos obtidos com sucesso.
       headers:
