@@ -246,6 +246,55 @@ paths:
           $ref: '#/components/responses/SiteIsOverloaded'
         default:
           $ref: '#/components/responses/Default'
+  /portabilities/{portabilityId}/cancel:
+    patch:
+      tags:
+        - Credit Portability
+      summary: Comunica a Instituição Credora a respeito do cancelamento da portabilidade de crédito.
+      description: Comunica a Instituição Credora a respeito do cancelamento da portabilidade de crédito.
+      parameters:
+        - $ref: '#/components/parameters/portabilityId'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/xFapiAuthDate'
+        - $ref: '#/components/parameters/xFapiCustomerIpAddress'
+        - $ref: '#/components/parameters/xFapiInteractionId'
+        - $ref: '#/components/parameters/xCustomerUserAgent'
+      requestBody:
+        content:
+          application/jwt:
+            schema:
+              $ref: '#/components/schemas/RequestCancelingCreditPortability'
+        description: Payload para comunicar a Instituição Credora a respeito do cancelamento da portabilidade de crédito.
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseCancelingCreditPortability'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '423':
+          $ref: '#/components/responses/Locked'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+        '529':
+          $ref: '#/components/responses/SiteIsOverloaded'
+        default:
+          $ref: '#/components/responses/Default'
 
 components:
   schemas:
@@ -441,6 +490,7 @@ components:
           type: object
           description: Conjunto de informações referentes à Proposta de Portabilidade de Crédito da Proponente para a Credora
           required:
+            - creationDateTime
             - customerContact
             - institution
             - contractIdentification
@@ -456,6 +506,14 @@ components:
                 maxLength: 100
                 minLength: 1
                 example: "54d5348c-1a3f-4ff4-a8a8-d0724fb806c6"
+              creationDateTime:
+                type: string
+                maxLength: 20
+                minLength: 20
+                pattern: '^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$'
+                example: 2020-07-21T08:30:00Z
+                description: |
+                  Data e hora em que a Proponente registrou a presente proposta (chamada ao POST /portabilities). Uma string com data e hora conforme especificação RFC-3339, sempre com a utilização de timezone UTC-0 (UTC time format).
               customerContact:
                 type: array
                 minItems: 1
@@ -590,6 +648,10 @@ components:
                 required:
                   - cet
                   - amortizationScheduled
+                  - totalNumberOfInstalments
+                  - instalmentPeriodicity
+                  - instalmentPeriodicityAdditionalInfo
+                  - dueDate
                   - interestRates
                   - contractedFees
                   - contractedFinanceCharges
@@ -635,6 +697,37 @@ components:
                       Informação relativa ao complemento da amortização
 
                       [Restrição] Campo de preenchimento obrigatório quando o campo amortizationScheduled for igual `OUTROS`
+                  totalNumberOfInstalments:
+                    type: number
+                    example: 30
+                    description: Total de parcelas, segundo a periodicidade regular das parcelas referente à Modalidade de Crédito informada.
+                  instalmentPeriodicity:
+                    type: string
+                    enum: 
+                      - SEM_PERIODICIDADE_REGULAR
+                      - SEMANAL
+                      - QUINZENAL
+                      - MENSAL
+                      - BIMESTRAL
+                      - TRIMESTRAL
+                      - SEMESTRAL
+                      - ANUAL
+                      - OUTROS
+                    example: SEM_PERIODICIDADE_REGULAR
+                    description: Informação relativa à periodicidade regular das parcelas. (Vide Enum) sem periodicidade regular, semanal, quinzenal, mensal, bimestral, trimestral, semestral, annual.
+                  instalmentPeriodicityAdditionalInfo:
+                    type: string
+                    maxLength: 144
+                    pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                    example: Informações Adicionais
+                    description: Campo obrigatório para complementar a informação relativa à periodicidade de pagamento regular quando tiver a opção  `OUTROS`.
+                  dueDate:
+                    type: string
+                    maxLength: 20
+                    minLength: 20
+                    pattern: '^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$'
+                    example: 2020-07-21T08:30:00Z
+                    description: Prazo (data de vencimento final) da operação. Especificação RFC-3339.
                   interestRates:
                     type: array
                     description: |
@@ -773,8 +866,6 @@ components:
                     required:
                       - documentId
                       - signatureDateTime
-              
-                
               status:
                 type: string
                 description: |
@@ -899,6 +990,124 @@ components:
                     required:
                       - documentId
                       - signatureDateTime
+              receipt:
+                type: object
+                required:
+                  - settlementDateTime
+                  - settlementAmount
+                  - transactionId
+                description: |
+                  Objeto contendo o recibo de quitação do contrato original de empréstimo após finalizado o pedido de portabilidade de crédito com sucesso junto a Instituição Credora.
+                  
+                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando `status` for igual a `PORTABILITY_COMPLETED`
+                properties:
+                  settlementDateTime:
+                    type: string
+                    maxLength: 20
+                    minLength: 20
+                    pattern: '^(\d{4})-(1[0-2]|0?[1-9])-(3[01]|[12][0-9]|0?[1-9])T(?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)Z$'
+                    example: 2020-07-21T08:30:00Z
+                    description: Data e hora em que a instituição credora realizou a quitação do contrato de empréstimo.
+                  settlementAmount:
+                    type: object
+                    required:
+                      - amount
+                      - currency
+                    properties:
+                      amount:
+                        type: string
+                        maxLength: 20
+                        minLength: 4
+                        pattern: '^\d{1,15}\.\d{2,4}$'
+                        example: 1000.0400
+                        description: Valor pago para liquidação do contrato de empréstimo.
+                      currency:
+                        type: string
+                        maxLength: 3
+                        minLength: 3
+                        pattern:  '^(\w{3}){1}$'
+                        example: BRL
+                        description: Moeda referenciada ao campo `amount`, segundo modelo ISO-4217
+                  transactionId:
+                    type: string
+                    maxLength: 20
+                    minLength: 1
+                    pattern:  '^(?!\s)[\w\W\s]*[^\s]$'
+                    example: STR20181108000000013
+                    description: |
+                      Identificador da transação utilizado para liquidar o contrato de empréstimo.
+                          
+                      No contexto de STR0047, utilizar o valor do campo de retorno NumCtrlSTR (Número de Controle da STR).
+              rejection:
+                type: object
+                required:
+                  - rejectedBy
+                  - reason
+                description: |
+                  Objeto contendo detalhes do cancelamento do pedido de portabilidade de crédito junto a Instituição Credora.
+
+                  [RESTRIÇÃO] Campo de preenchimento obrigatório quando `status` for igual a `REJECTED` ou `CANCELED`
+                properties:
+                  rejectedBy:
+                    type: string
+                    enum:
+                      - PROPONETE
+                      - USUARIO
+                      - CREDORA
+                    example: PROPONENTE
+                    description: |
+                      Informar usuário responsável pela rejeição da proposta, onde:
+                      
+                      `PROPONENTE` - Indica que o pedido de portabilidade de crédito foi rejeitado pela proponente, seja porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                      `USUARIO` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
+                      `CREDORA`-Indica que a Instituição Credora cancelou o contrato por retenção do cliente ou outros motivos conforme motivo de recusa.
+                  reason:
+                    type: object
+                    description: Motivo de recusa do pedido de portabilidade de crédito.
+                    required:
+                     - type
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - CANCELADO_PELO_CLIENTE
+                          - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
+                          - POLITICA_DE_CREDITO
+                          - RETENCAO_DO_CLIENTE
+                          - CONTRATO_JA_LIQUIDADO
+                          - DIVERGENCIA_DE_PAGAMENTO_EFETUADO
+                          - DECURSO_DO_PRAZO_PARA_PAGAMENTO
+                          - PORTABILIDADE_CANCELADA_POR_FALTA_DE_LIQUIDACAO
+                          - PORTABILIDADE_EM_ANDAMENTO
+                          - CLIENTE_COM_ACAO_JUDICIAL
+                          - MODALIDADE_DA_OPERACAO_INCOMPATIVEL
+                          - OUTROS
+                        example: CANCELADO_PELO_CLIENTE
+                        description: |
+                          Motivo de recusa do pedido de portabilidade, onde:
+                          
+                          `CANCELADO_PELO_CLIENTE` - Cliente desiste do pedido da portabilidade
+                          
+                          `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente
+                          `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas
+                          `RETENCAO_DO_CLIENTE` - Cliente aceitou contraproposta da instituição credora (dentro do prazo)
+                          `CONTRATO_JA_LIQUIDADO` - Contrato liquidado pelo cliente
+                          `DIVERGENCIA_DE_PAGAMENTO_EFETUADO` - Proponente realizou a liquidação com valor divergente
+                          `DECURSO_DO_PRAZO_PARA_PAGAMENTO` - Proponente realizou a liquidação fora do prazo
+                          `PORTABILIDADE_CANCELADA_POR_FALTA_DE_LIQUIDACAO` - Proponente não realizou a liquidação da Portabilidade
+                          `PORTABILIDADE_EM_ANDAMENTO` - Posteriormente à efetivação do pedido de portabilidade, a IF credora identificou que o cliente já possui outro pedido de portabilidade em andamento para o mesmo contrato
+                          `CLIENTE_COM_ACAO_JUDICIAL` - Possui ação judicial
+                          `MODALIDADE_DA_OPERACAO_INCOMPATIVEL` - Modalidade divergente da indicada pela instituição proponente
+                          `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
+                      typeAdditionalInfo:
+                        type: string
+                        maxLength: 144
+                        pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                        example: Informações Adicionais
+                        description: |
+                          Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito. Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance para discussão e mapeamento em futuras versões.
+                          
+                          [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo type for igual a OUTROS.
         links:
           $ref: '#/components/schemas/Links'
         meta:
@@ -1664,6 +1873,140 @@ components:
                     required:
                       - documentId
                       - signatureDateTime
+    
+    RequestCancelingCreditPortability:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
+          required:
+            - status
+            - reason
+
+          properties:
+              rejectedBy:
+                type: string
+                description: |
+                  Informar usuário responsável pela rejeição da proposta, onde:
+                  
+                  `PROPONETE` - Indica que o pedido de portabilidade de crédito foi rejeitado pela proponente, seja porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  
+                  `USUARIO` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
+
+                enum:
+                  - PROPONENTE
+                  - USUARIO
+              reason:
+                type: object
+                required: 
+                  - type
+                description: |
+                  Motivo de recusa do pedido de portabilidade
+                properties: 
+                  type:
+                    description: |
+                      Motivo de recusa do pedido de portabilidade, onde:
+                      
+                      `CANCELADO_PELO_CLIENTE` - Cliente desiste do pedido da portabilidade 
+                      
+                      `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente 
+                      
+                      `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas 
+                      
+                      `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
+                    type: string
+                    enum:
+                      - CANCELADO_PELO_CLIENTE
+                      - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
+                      - POLITICA_DE_CREDITO
+                      - OUTROS
+                    
+                  typeAdditionalInfo: 
+                    description: |
+                      Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
+                      Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
+                      para discussão e mapeamento em futuras versões.
+
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
+                    type: string
+                    maxLength: 144
+                    pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                    example: Informações Adicionais
+
+    ResponseCancelingCreditPortability:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          minItems: 0
+          description: Objeto para notificar a respeito da liquidação efetuada pela proponente a credora
+          required:
+            - status
+            - reason
+
+          properties:
+              rejectedBy:
+                type: string
+                description: |
+                  Informar usuário responsável pela rejeição da proposta, onde:
+                  
+                  `PROPONETE` - Indica que o pedido de portabilidade de crédito foi rejeitado pela proponente, seja porque a proponente rejeitou a liquidação que excedeu em 15% o valor do contrato original, entre outras possibilidades.
+                  
+                  `USUARIO` - Indica que o cliente cancelou o pedido de portabilidade de crédito.
+
+                enum:
+                  - PROPONENTE
+                  - USUARIO
+              reason:
+                type: object
+                required: 
+                  - type
+                description: |
+                  Motivo de recusa do pedido de portabilidade
+                properties: 
+                  type:
+                    description: |
+                      Motivo de recusa do pedido de portabilidade, onde:
+                      
+                      `CANCELADO_PELO_CLIENTE` - Cliente desiste do pedido da portabilidade 
+                      
+                      `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente 
+                      
+                      `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas 
+                      
+                      `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
+                    type: string
+                    enum:
+                      - CANCELADO_PELO_CLIENTE
+                      - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
+                      - POLITICA_DE_CREDITO
+                      - OUTROS
+                    
+                  typeAdditionalInfo: 
+                    description: |
+                      Informação sobre a disponibilidade ou não de um contrato para a portabilidade de crédito.
+                      Ao utilizar essa opção, é fortemente recomendável enviar um ticket como sugestão da estrutura Open Finance 
+                      para discussão e mapeamento em futuras versões.
+
+                      [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `reasonType` for igual `OUTROS`
+                    type: string
+                    maxLength: 144
+                    pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                    example: Informações Adicionais
+        meta:
+          type: object
+          properties:
+            requestDateTime:
+              description: 'Data e hora da consulta, conforme especificação RFC-3339, formato UTC.'
+              type: string
+              maxLength: 20
+              format: date-time
+              example: '2021-05-21T08:30:00Z'
     Meta:
       type: object
       description: Meta informações referente à API requisitada.
@@ -1853,6 +2196,23 @@ components:
           scopes:
             loans: Escopo necessário para acesso à API Loans. O controle dos endpoints específicos é feito via permissions.
   responses:
+    ResponseCancelingCreditPortability:
+      description: Dados da confirmação do cancelamento da portabilidade de crédito.
+      headers:
+        x-fapi-interaction-id:
+          description: |
+            Um UUID [RFC4122](https://tools.ietf.org/html/rfc4122) usado como um ID de correlação entre request e response. Campo de geração e envio obrigatório pela IF Proponente (client) e o seu valor deve ser “espelhado” pela IF Credora (server) no cabeçalho de resposta. Caso não seja recebido ou se for recebido um valor inválido, a IF Credora deve gerar um x-fapi-interaction-id e retorná-lo na resposta com o HTTP Status Code 400. A IF Proponente deve acatar o valor recebido da IF Credora.
+          schema:
+            $ref: '#/components/schemas/XFapiInteractionId'
+        x-v:
+          description: |
+            Cabeçalho de envio obrigatório que indica a versão implementada da API pela instituição financeira. Deve ser preenchido de forma completa, por exemplo: x-v : 1.0.2
+          schema:
+            $ref: '#/components/schemas/XV'
+      content:
+        application/jwt:
+          schema:
+            $ref: '#/components/schemas/ResponseCancelingCreditPortability'
     OKResponseAccountData:
       description: Dados para realização do pagamento da operação via TED.
       headers:
