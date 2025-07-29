@@ -928,7 +928,7 @@ components:
             'consent:consentId': Fluxo OAuth necessário para que a instituição proponente tenha acesso aos dados na instituição credora. Requer o processo de redirecionamento e autenticação do usuário a que se referem os dados.
   responses:
     POSTResponseCreditPortability:
-      description: Dados dos contratos de empréstimo obtidos com sucesso.
+      description: Dados da solicitação de portabilidade de crédito.
       headers:
         x-fapi-interaction-id:
           description: |
