@@ -216,6 +216,13 @@ components:
                       Para os demais clientes (tipos de cliente 3, 4, 5 e 6), informar 14 (catorze) posições com complemento de zeros à esquerda se a identificação tiver tamanho inferior;
                       
                       - Código do contrato: 1 (uma) até 40 (quarenta) posições, sem complemento de caracteres.
+                  siapeContractId:
+                    type: string
+                    pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]{0,19}$
+                    maxLength: 20
+                    minLength: 1
+                    example: "12346579841058798Asq"
+                    description: "Número do contrato dado pela instituição contratante no sistema SIAPE do SERPRO."
               proposedContract:
                 type: object
                 minItems: 1
@@ -514,6 +521,7 @@ components:
                   - PENDING
                   - ACCEPTED_SETTLEMENT_IN_PROGRESS
                   - ACCEPTED_SETTLEMENT_COMPLETED
+                  - AWAITING_CONTRACT_DISCHARGE
                   - PORTABILITY_COMPLETED
                   - REJECTED
                   - CANCELLED
