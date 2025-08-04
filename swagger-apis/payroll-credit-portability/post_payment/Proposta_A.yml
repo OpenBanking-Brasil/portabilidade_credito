@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: API Credit Portability - Open Finance Brasil
+  title: API Payroll Credit Portability - Open Finance Brasil
   description: |
-    A API de Portabilidade de Crédito permite que usuários transfiram suas operações de crédito e arrendamento mercantil entre instituições financeiras em busca de melhores condições para o Open Finance Brasil.
+    A API de Portabilidade de Crédito Consignado permite que usuários transfiram suas operações de crédito e arrendamento mercantil entre instituições financeiras em busca de melhores condições para o Open Finance Brasil.
 
     # Orientações
     
@@ -58,9 +58,9 @@ info:
     email: gt-interfaces@openbankingbr.org
     url: 'https://openbanking-brasil.github.io/areadesenvolvedor/'
 servers:
-  - url: 'https://api.banco.com.br/open-banking/credit-portability/v1'
+  - url: 'https://api.banco.com.br/open-banking/payroll-credit-portability/v1'
     description: Servidor de Produção
-  - url: 'https://apih.banco.com.br/open-banking/credit-portability/v1'
+  - url: 'https://apih.banco.com.br/open-banking/payroll-credit-portability/v1'
     description: Servidor de Homologação
 tags:
   - name: Payments
@@ -114,7 +114,7 @@ paths:
           $ref: '#/components/responses/Default'
       security:
         - OAuth2ClientCredentials:
-            - credit-portability
+            - payroll-credit-portability
 components:
   schemas:
     RequestCreditPortabilityPayment:
@@ -427,7 +427,7 @@ components:
         clientCredentials:
           tokenUrl: 'https://authserver.example/token'
           scopes:
-            credit-portability: Escopo necessário para acesso à API Portabilidade de Crédito.
+            payroll-credit-portability: Escopo necessário para acesso à API Portabilidade de Crédito.
     OAuth2AuthorizationCodeLoans:
       type: oauth2
       description: Fluxo OAuth necessário para que a receptora tenha acesso aos dados na instituição transmissora. Requer o processo de redirecionamento e autenticação do usuário a que se referem os dados.
@@ -654,3 +654,4 @@ components:
         application/json; charset=utf-8:
           schema:
             $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+
