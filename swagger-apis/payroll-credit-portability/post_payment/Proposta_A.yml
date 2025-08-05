@@ -163,7 +163,7 @@ components:
                     description: Moeda referenciada ao campo `amount`, segundo modelo ISO-4217.
               transactionId:
                 type: string
-                pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                pattern: '^[^\s](?:.*[^\s])?$'
                 maxLength: 20
                 minLength: 1
                 example: 'STR20181108000000013'
@@ -218,7 +218,7 @@ components:
                     description: Moeda referenciada ao campo `amount`, segundo modelo ISO-4217.
               transactionId:
                 type: string
-                pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                pattern: '^[^\s](?:.*[^\s])?$'
                 maxLength: 20
                 minLength: 1
                 example: 'STR20181108000000013'
@@ -654,4 +654,5 @@ components:
         application/json; charset=utf-8:
           schema:
             $ref: '#/components/schemas/ResponseErrorWithAbleAdditionalProperties'
+
 
