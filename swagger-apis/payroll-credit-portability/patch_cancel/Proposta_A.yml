@@ -169,7 +169,7 @@ components:
                 typeAdditionalInfo:
                   type: string
                   maxLength: 144
-                  pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                  pattern: '^[^\s](?:.*[^\s])?$'
                   example: "Informações Adicionais"
                   description: |
                     Informação adicional sobre rejeição de portabilidade de crédito. 
@@ -228,7 +228,7 @@ components:
                 typeAdditionalInfo:
                   type: string
                   maxLength: 144
-                  pattern: '^(?!\s)[\w\W\s]*[^\s]$'
+                  pattern: '^[^\s](?:.*[^\s])?$'
                   example: "Informações Adicionais"
                   description: |
                     Informação adicional sobre rejeição de portabilidade de crédito. 
