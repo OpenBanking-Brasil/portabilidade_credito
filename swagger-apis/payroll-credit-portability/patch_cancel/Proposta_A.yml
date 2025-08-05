@@ -156,12 +156,15 @@ components:
                     `SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE` - Saldo devedor atualizado divergente (superior a 15%) do informado inicialmente
 
                     `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas
+                    
+                    `RESERVA_DA_MARGEM` - Problemas relacionado a liberação/reserva da margem solicitada pela proponente
 
                     `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
                   enum:
                     - CANCELADO_PELO_CLIENTE
                     - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
                     - POLITICA_DE_CREDITO
+                    - RESERVA_DA_MARGEM
                     - OUTROS
                 typeAdditionalInfo:
                   type: string
@@ -172,7 +175,7 @@ components:
                     Informação adicional sobre rejeição de portabilidade de crédito. 
                     Ao utilizar essa opção, é fortemente recomendável enviar um ticket para o GT de Portabilidade de Crédito como sugestão para estrutura Open Finance para discussão e mapeamento em futuras versões.
                     
-                    [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `type` for igual a `OUTROS`.
+                    [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `type` for igual a `OUTROS` ou quando o campo `type` for igual a `RESERVA_DE_MARGEM`.
     PatchResponseCreditPortabilityCancel:
       type: object
       required:
@@ -213,11 +216,14 @@ components:
 
                     `POLITICA_DE_CREDITO` - Proponente desiste da oferta ao cliente por políticas internas
 
+                    `RESERVA_DA_MARGEM` - Problemas relacionado a liberação/reserva da margem solicitada pela proponente
+                    
                     `OUTROS` - Motivo da rejeição não se encaixa nas opções disponíveis
                   enum:
                     - CANCELADO_PELO_CLIENTE
                     - SALDO_DEVEDOR_ATUALIZADO_SUBSTANCIALMENTE_DIVERGENTE
                     - POLITICA_DE_CREDITO
+                    - RESERVA_DA_MARGEM
                     - OUTROS
                 typeAdditionalInfo:
                   type: string
@@ -228,7 +234,7 @@ components:
                     Informação adicional sobre rejeição de portabilidade de crédito. 
                     Ao utilizar essa opção, é fortemente recomendável enviar um ticket para o GT de Portabilidade de Crédito como sugestão para estrutura Open Finance para discussão e mapeamento em futuras versões.
                     
-                    [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `type` for igual a `OUTROS`.
+                    [RESTRIÇÃO] Campo de preenchimento obrigatório quando campo `type` for igual a `OUTROS` ou quando o campo `type` for igual a `RESERVA_DE_MARGEM`.
         meta:
           $ref: '#/components/schemas/Meta'
     EnumErrorsRequestPayment:
