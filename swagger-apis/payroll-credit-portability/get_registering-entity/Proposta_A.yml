@@ -66,14 +66,14 @@ tags:
   - name: Registering Entity
     description: 'Fornece dados do contrato consignado junto a averbadora.'
 paths:
-  /portabilities/{portabilityId}/registering-entity:
+  /credit-operations/{contractId}/registering-entity:
     get:
       tags:
         - Registering Entity
       summary: Obtém os dados necessários para identificar o contrato a ser portado junto a averbadora.
       operationId: creditPortabilityGetRegisteringEntity
       parameters:
-        - $ref: '#/components/parameters/portabilityId'
+        - $ref: '#/components/parameters/contractId'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/xFapiAuthDate'
         - $ref: '#/components/parameters/xFapiCustomerIpAddress'
